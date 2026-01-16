@@ -2,9 +2,10 @@ from flask import Flask, render_template, request, jsonify
 from datetime import datetime
 import mysql.connector
 from config import DB_CONFIG
+from flask_cors import CORS
 
 app = Flask(__name__)
-
+CORS(app, origins=["https://juanfigueroa0.github.io/lavadero", "http://localhost:3000"])
 
 def get_db_connection():
     """Obtiene una conexión a la base de datos"""
@@ -348,3 +349,4 @@ def eliminar(tipo, id):
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
+
