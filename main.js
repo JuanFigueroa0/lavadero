@@ -275,12 +275,13 @@ async function cargarReportes() {
             </div>
         `;
 
-        // Stats de empleados (JUAN simplificado al final)
+        // Stats de empleados con propina detallada
         if (document.getElementById('statsEmpleados')) {
             let empleadosHTML = '';
             if (reportes.porEmpleado) {
+                // Primero los 4 empleados principales
                 empleadosHTML = Object.entries(reportes.porEmpleado)
-                    .filter(([empleado]) => empleado !== 'Juan')  // Excluir Juan primero
+                    .filter(([empleado]) => empleado !== 'Juan')
                     .map(([empleado, datos]) => {
                         const salarioConDescuento = (datos.salario || 0).toFixed(2);
                         const salarioSinDescuento = ((parseFloat(salarioConDescuento) + (datos.prestamos || 0))).toFixed(2);
@@ -289,36 +290,33 @@ async function cargarReportes() {
                         return `
                             <div class="stat-card">
                                 <h3>${empleado}</h3>
-                                <div class="value">${(datos.total_servicios || 0).toLocaleString('es-CO')}</div>
+                                <div class="value">$${parseFloat(datos.total_servicios || 0).toLocaleString('es-CO')}</div>
                                 <small style="opacity: 0.9; display: block; margin-top: 10px;">
                                     Servicios sencillos: ${numSencillos}<br>
                                     Servicios especiales: ${datos.num_especiales || 0}<br>
+                                    <strong>Propina Total: $${parseFloat(datos.propinaTotal || 0).toLocaleString('es-CO')}</strong><br>
                                     ${ (datos.prestamos || 0) > 0 
-                                        ? `Salario (sin descuentos): ${parseFloat(salarioSinDescuento).toLocaleString('es-CO')}<br>` 
-                                        : `Salario: ${parseFloat(salarioConDescuento).toLocaleString('es-CO')}<br>`
+                                        ? `Salario base (sin descuentos): $${parseFloat(salarioSinDescuento).toLocaleString('es-CO')}<br>` 
+                                        : `Salario base: $${parseFloat(salarioConDescuento).toLocaleString('es-CO')}<br>`
                                     }
-                                    Préstamos: ${(datos.prestamos || 0).toLocaleString('es-CO')}
-                                    ${ (datos.prestamos || 0) > 0 
-                                        ? `<br><strong style="color: #fff;">Salario Final:</strong> ${parseFloat(salarioConDescuento).toLocaleString('es-CO')}` 
-                                        : ''
-                                    }
+                                    Préstamos: $${(datos.prestamos || 0).toLocaleString('es-CO')}<br>
+                                    <strong style="color: #fff; font-size: 1.1em;">Salario Final: $${parseFloat(salarioConDescuento).toLocaleString('es-CO')}</strong>
                                 </small>
                             </div>
                         `;
                     }).join('');
 
-                // Agregar Juan al FINAL (solo servicios totales y sueldo)
+                // Juan al FINAL (simplificado)
                 const juan = reportes.porEmpleado['Juan'];
                 if (juan) {
-                    const salarioJuan = (juan.salario || 0).toFixed(2);
+                    const salarioJuan = parseFloat(juan.salario || 0).toFixed(2);
                     empleadosHTML += `
-                        <div class="stat-card" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);">
-                            <h3>${'Juan'}</h3>
+                        <div class="stat-card" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); border: 2px solid #a78bfa;">
+                            <h3>Juan (General)</h3>
                             <div class="value">${reportes.totalServicios || 0} servicios totales</div>
                             <small style="opacity: 0.9; display: block; margin-top: 10px;">
-                                <strong>Salario: $${parseFloat(salarioJuan).toLocaleString('es-CO')}</strong><br>
-                                (${(reportes.prestamosTotales || 0).toLocaleString('es-CO')} total servicios × $1,000)
-                                ${ (juan.prestamos || 0) > 0 ? `<br>Préstamos: $${(juan.prestamos || 0).toLocaleString('es-CO')}` : ''}
+                                <strong style="color: #fff;">Salario: $${salarioJuan.toLocaleString('es-CO')}</strong><br>
+                                <small>(${reportes.totalServicios || 0} × $1,000 ${(juan.prestamos > 0 ? `- Préstamos: $${juan.prestamos.toLocaleString('es-CO')}` : '')})</small>
                             </small>
                         </div>
                     `;
@@ -332,6 +330,7 @@ async function cargarReportes() {
         alert('Error al cargar reportes');
     }
 }
+
 async function eliminar(tipo, id) {
     if (!confirm('¿Estás seguro de eliminar este registro?')) return;
     
@@ -386,4 +385,5 @@ window.addEventListener('DOMContentLoaded', () => {
     cargarGastos();
     cargarPrestamos();
 });
+
 
