@@ -20,10 +20,29 @@ function actualizarPrecio() {
     
     if (precio) {
         costoInput.value = precio;
+        costoInput.style.background = '#e8f4f8'; // Color neutro para indicar editable
     } else {
         costoInput.value = '';
     }
 }
+
+// Control de propina
+document.addEventListener('DOMContentLoaded', function() {
+    const hayPropinaSelect = document.getElementById('hayPropina');
+    const grupoPropina = document.getElementById('grupoPropina');
+    const valorPropina = document.getElementById('valorPropina');
+    
+    hayPropinaSelect.addEventListener('change', function() {
+        if (this.value === 'si') {
+            grupoPropina.style.display = 'block';
+            valorPropina.required = true;
+        } else {
+            grupoPropina.style.display = 'none';
+            valorPropina.required = false;
+            valorPropina.value = '';
+        }
+    });
+});
 
 function openTab(tabName) {
     const tabs = document.querySelectorAll('.tab-content');
@@ -43,11 +62,17 @@ function openTab(tabName) {
 // Registrar Servicio
 document.getElementById('formServicio').addEventListener('submit', async (e) => {
     e.preventDefault();
+    const hayPropina = document.getElementById('hayPropina').value === 'si';
+    const propina = hayPropina ? parseFloat(document.getElementById('valorPropina').value || 0) : 0;
+    const costoInput = document.getElementById('costo');
+    const costoFinal = parseFloat(costoInput.value) || 0;
+    
     const data = {
         empleado: document.getElementById('empleado').value,
         servicio: document.getElementById('servicio').value,
-        costo: parseFloat(document.getElementById('costo').value),
-        metodoPago: document.getElementById('metodoPago').value
+        costo: costoFinal,  // Usa el valor editado por el usuario
+        metodoPago: document.getElementById('metodoPago').value,
+        propina: propina
     };
     
     try {
@@ -57,9 +82,12 @@ document.getElementById('formServicio').addEventListener('submit', async (e) => 
         });
         
         if (response.ok) {
-            alert('Servicio registrado exitosamente');
+            alert(`Servicio registrado exitosamente\nCosto final: $${costoFinal.toLocaleString('es-CO')}${propina > 0 ? ` + Propina: $${propina.toLocaleString('es-CO')}` : ''}`);
             e.target.reset();
-            actualizarPrecio(); // Resetear precio
+            document.getElementById('hayPropina').value = 'no';
+            document.getElementById('grupoPropina').style.display = 'none';
+            costoInput.value = '';
+            costoInput.style.background = '#f0f0f0';
             cargarServicios();
         } else {
             const error = await response.text();
@@ -135,7 +163,7 @@ async function cargarServicios() {
         const tbody = document.querySelector('#tablaServicios tbody');
         
         if (!servicios || servicios.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No hay servicios registrados</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No hay servicios registrados</td></tr>';
             return;
         }
         
@@ -146,6 +174,7 @@ async function cargarServicios() {
                 <td>${s.servicio}</td>
                 <td>$${parseFloat(s.costo || 0).toLocaleString('es-CO')}</td>
                 <td>${s.metodoPago}</td>
+                <td>$${parseFloat(s.propina || 0).toLocaleString('es-CO')}</td>
                 <td><button class="delete-btn" onclick="eliminar('servicio', ${s.id})">Eliminar</button></td>
             </tr>
         `).join('');
@@ -246,7 +275,7 @@ async function cargarReportes() {
             </div>
         `;
 
-        // Stats de empleados (manteniendo la lógica original)
+        // Stats de empleados
         if (document.getElementById('statsEmpleados')) {
             let empleadosHTML = '';
             if (reportes.porEmpleado) {
@@ -263,14 +292,12 @@ async function cargarReportes() {
                                 <small style="opacity: 0.9; display: block; margin-top: 10px;">
                                     Servicios sencillos: ${numSencillos}<br>
                                     Servicios especiales: ${datos.num_especiales || 0}<br>
-                                    ${
-                                        (datos.prestamos || 0) > 0 
+                                    ${ (datos.prestamos || 0) > 0 
                                         ? `Salario (sin descuentos): ${parseFloat(salarioSinDescuento).toLocaleString('es-CO')}<br>` 
                                         : `Salario: ${parseFloat(salarioConDescuento).toLocaleString('es-CO')}<br>`
                                     }
                                     Préstamos: ${(datos.prestamos || 0).toLocaleString('es-CO')}
-                                    ${
-                                        (datos.prestamos || 0) > 0 
+                                    ${ (datos.prestamos || 0) > 0 
                                         ? `<br><strong style="color: #fff;">Salario Final:</strong> ${parseFloat(salarioConDescuento).toLocaleString('es-CO')}` 
                                         : ''
                                     }
