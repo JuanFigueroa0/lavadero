@@ -22,7 +22,6 @@ def get_db_connection():
         print(f"Error de conexión a BD: {err}")
         return None
 
-
 def formatear_hora_desde_fecha(valor):
     """Convierte un datetime o string de fecha a solo HH:MM."""
     if valor is None:
@@ -40,7 +39,7 @@ def index():
     return jsonify({
         "status": "OK",
         "message": "Lavadero API activa - Frontend en GitHub Pages",
-        "version": "1.0",
+        "version": "1.1",
         "endpoints": {
             "POST /api/servicio": "Registrar servicio",
             "GET /api/servicios": "Listar servicios", 
@@ -77,8 +76,6 @@ def cerrar_dia():
         print(f"Error al cerrar día: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
-
 @app.route('/api/servicio', methods=['POST'])
 def agregar_servicio():
     try:
@@ -91,15 +88,16 @@ def agregar_servicio():
         
         cursor = conn.cursor()
         query = """
-        INSERT INTO servicios (fecha, empleado, servicio, costo, metodoPago)
-        VALUES (%s, %s, %s, %s, %s)
+        INSERT INTO servicios (fecha, empleado, servicio, costo, metodoPago, propina)
+        VALUES (%s, %s, %s, %s, %s, %s)
         """
         cursor.execute(query, (
             fecha,
             servicio['empleado'],
             servicio['servicio'],
             servicio['costo'],
-            servicio['metodoPago']
+            servicio['metodoPago'],
+            servicio.get('propina', 0)
         ))
         conn.commit()
         cursor.close()
@@ -108,7 +106,6 @@ def agregar_servicio():
     except Exception as e:
         print(f"Error en agregar_servicio: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 @app.route('/api/gasto', methods=['POST'])
 def agregar_gasto():
@@ -134,7 +131,6 @@ def agregar_gasto():
         print(f"Error en agregar_gasto: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
 @app.route('/api/prestamo', methods=['POST'])
 def agregar_prestamo():
     try:
@@ -159,7 +155,6 @@ def agregar_prestamo():
         print(f"Error en agregar_prestamo: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
 @app.route('/api/servicios')
 def obtener_servicios():
     try:
@@ -182,7 +177,6 @@ def obtener_servicios():
     except Exception as e:
         print(f"Error en obtener_servicios: {e}")
         return jsonify([]), 500
-
 
 @app.route('/api/gastos')
 def obtener_gastos():
@@ -207,7 +201,6 @@ def obtener_gastos():
         print(f"Error en obtener_gastos: {e}")
         return jsonify([]), 500
 
-
 @app.route('/api/prestamos')
 def obtener_prestamos():
     try:
@@ -231,7 +224,6 @@ def obtener_prestamos():
         print(f"Error en obtener_prestamos: {e}")
         return jsonify([]), 500
 
-
 @app.route('/api/reportes')
 def obtener_reportes():
     try:
@@ -253,8 +245,9 @@ def obtener_reportes():
         cursor.close()
         conn.close()
         
-        ingresos_efectivo = sum(float(s['costo']) for s in servicios if s['metodoPago'] == 'efectivo')
-        ingresos_transferencia = sum(float(s['costo']) for s in servicios if s['metodoPago'] == 'transferencia')
+        # Ingresos incluyendo propinas
+        ingresos_efectivo = sum(float(s['costo']) + float(s.get('propina', 0)) for s in servicios if s['metodoPago'] == 'efectivo')
+        ingresos_transferencia = sum(float(s['costo']) + float(s.get('propina', 0)) for s in servicios if s['metodoPago'] == 'transferencia')
         ingresos_totales = ingresos_efectivo + ingresos_transferencia
         gastos_totales = sum(float(g['monto']) for g in gastos)
         prestamos_totales = sum(float(p['monto']) for p in prestamos)
@@ -276,7 +269,8 @@ def obtener_reportes():
                 }
                 continue
             
-            total_servicios = sum(float(s['costo']) for s in servicios_emp)
+            # Total servicios + propinas para este empleado
+            total_servicios = sum(float(s['costo']) + float(s.get('propina', 0)) for s in servicios_emp)
             num_servicios = len(servicios_emp)
             num_especiales = sum(
                 1 for s in servicios_emp 
@@ -309,9 +303,24 @@ def obtener_reportes():
                 'prestamos': float(prestamos_emp)
             }
         
-        efectivo_en_caja = ingresos_efectivo - gastos_totales - prestamos_totales
-        ganancia_neta = ingresos_totales - gastos_totales - prestamos_totales - 130000
+        # Agregar Juan: $1000 por cada servicio total realizado
         total_servicios_realizados = len(servicios)
+        prestamos_juan = sum(float(p['monto']) for p in prestamos if p.get('prestatario') == 'Juan')
+        juan_salario = (total_servicios_realizados * 1000) - prestamos_juan
+        salarios['Juan'] = {
+            'total_servicios': 0,
+            'num_servicios': 0,
+            'num_especiales': 0,
+            'salario': float(juan_salario),
+            'prestamos': float(prestamos_juan)
+        }
+        dinero_caja_empleados += juan_salario
+        
+        # Ganancia neta restando TOTAL sueldos empleados
+        total_sueldos_empleados = sum(emp['salario'] for emp in salarios.values())
+        ganancia_neta = ingresos_totales - gastos_totales - prestamos_totales - total_sueldos_empleados
+        
+        efectivo_en_caja = ingresos_efectivo - gastos_totales - prestamos_totales
         
         return jsonify({
             'ingresosEfectivo': float(ingresos_efectivo),
@@ -330,7 +339,6 @@ def obtener_reportes():
         print(f"Error en obtener_reportes: {e}")
         print(traceback.format_exc())
         return jsonify({'error': f'Error al obtener reportes: {str(e)}'}), 500
-
 
 @app.route('/api/<tipo>/<int:id>', methods=['DELETE'])
 def eliminar(tipo, id):
@@ -359,9 +367,5 @@ def eliminar(tipo, id):
         print(f"Error en eliminar: {e}")
         return jsonify({'error': f'Error al eliminar: {str(e)}'}), 500
 
-
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
-
-
-
