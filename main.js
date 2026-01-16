@@ -312,11 +312,10 @@ async function cargarReportes() {
                     const salarioJuan = parseFloat(juan.salario || 0).toFixed(2);
                     empleadosHTML += `
                         <div class="stat-card" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); border: 2px solid #a78bfa;">
-                            <h3>Juan (General)</h3>
+                            <h3>Juan</h3>
                             <div class="value">${reportes.totalServicios || 0} servicios totales</div>
                             <small style="opacity: 0.9; display: block; margin-top: 10px;">
                                 <strong style="color: #fff;">Salario: $${salarioJuan.toLocaleString('es-CO')}</strong><br>
-                                <small>(${reportes.totalServicios || 0} × $1,000 ${(juan.prestamos > 0 ? `- Préstamos: $${juan.prestamos.toLocaleString('es-CO')}` : '')})</small>
                             </small>
                         </div>
                     `;
@@ -353,7 +352,7 @@ async function eliminar(tipo, id) {
 }
 
 async function cerrarDia() {
-    if (!confirm('🚨 ¡ATENCIÓN! 🚨\n\nEsto BORRARÁ TODOS los registros de:\n• Servicios\n• Gastos\n• Préstamos\n\n¿Estás seguro de que quieres CERRAR EL DÍA?')) {
+    if (!confirm('Cerrar el dia')) {
         return;
     }
     
@@ -365,7 +364,7 @@ async function cerrarDia() {
         const result = await response.json();
         
         if (result.success) {
-            alert('✅ ¡Día cerrado exitosamente!\n\n' + (result.mensaje || ''));
+            alert('Día cerrado exitosamente!\n\n' + (result.mensaje || ''));
             cargarServicios();
             cargarGastos();
             cargarPrestamos();
@@ -385,5 +384,6 @@ window.addEventListener('DOMContentLoaded', () => {
     cargarGastos();
     cargarPrestamos();
 });
+
 
 
