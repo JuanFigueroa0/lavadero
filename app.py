@@ -35,11 +35,11 @@ def formatear_hora_desde_fecha(valor):
     except Exception:
         return str(valor)
 
-
 @app.route('/')
-return jsonify({
+def index():
+    return jsonify({
         "status": "OK",
-        "message": "🚗 Lavadero API activa - Frontend en GitHub Pages",
+        "message": "Lavadero API activa - Frontend en GitHub Pages",
         "version": "1.0",
         "endpoints": {
             "POST /api/servicio": "Registrar servicio",
@@ -362,5 +362,6 @@ def eliminar(tipo, id):
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
+
 
 
