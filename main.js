@@ -233,7 +233,14 @@ async function cargarPrestamos() {
 async function cargarReportes() {
     try {
         const res = await apiFetch('/reportes');
+        
+        if (!res.ok) {
+            throw new Error(`HTTP error! Status: ${res.status}`);
+        }
+        
         const reportes = await res.json();
+        
+        console.log('Reportes recibidos:', reportes);
 
         // STATS GENERALES
         document.getElementById('statsGenerales').innerHTML = `
@@ -251,7 +258,7 @@ async function cargarReportes() {
             </div>
             <div class="stat-card">
                 <h3>Gastos Fijos</h3>
-                <div class="value">$${reportes.gastosFijos?.toLocaleString('es-CO') || '130,000'}</div>
+                <div class="value">$${(reportes.gastosFijos || 130000).toLocaleString('es-CO')}</div>
             </div>
             <div class="stat-card highlight">
                 <h3>Ganancia Neta Final</h3>
@@ -276,7 +283,10 @@ async function cargarReportes() {
         const ordenEmpleados = ['David', 'Luis', 'Norwin', 'Sergio', 'Juan'];
         
         let empleadosHTML = '';
-        if (reportes.porEmpleado) {
+        
+        if (reportes.porEmpleado && Object.keys(reportes.porEmpleado).length > 0) {
+            console.log('Datos por empleado:', reportes.porEmpleado);
+            
             // Ordenar empleados según el array ordenEmpleados
             const empleadosOrdenados = Object.entries(reportes.porEmpleado).sort((a, b) => {
                 const indexA = ordenEmpleados.indexOf(a[0]);
@@ -293,7 +303,7 @@ async function cargarReportes() {
                 // JUAN - Versión simplificada
                 if (empleado === 'Juan') {
                     empleadosHTML += `
-                        <div class="stat-card empleado" style="background: #ffffff;">
+                        <div class="stat-card empleado">
                             <h3>${empleado}</h3>
                             <div class="value-sueldo">
                                 <span class="salario-final">$${salarioFinal.toLocaleString('es-CO')}</span>
@@ -307,7 +317,7 @@ async function cargarReportes() {
                 } else {
                     // OTROS EMPLEADOS - Versión completa
                     empleadosHTML += `
-                        <div class="stat-card empleado" style="background: #ffffff;">
+                        <div class="stat-card empleado">
                             <h3>${empleado}</h3>
                             <div class="value-sueldo">
                                 <span class="salario-base">$${salarioBase.toLocaleString('es-CO')}</span>
@@ -324,16 +334,19 @@ async function cargarReportes() {
                     `;
                 }
             });
+            
+            document.getElementById('statsEmpleados').innerHTML = empleadosHTML;
+        } else {
+            console.log('No hay datos de empleados');
+            document.getElementById('statsEmpleados').innerHTML = '<p style="text-align: center; color: #666;">No hay datos de empleados</p>';
         }
         
-        document.getElementById('statsEmpleados').innerHTML = `
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
-                ${empleadosHTML}
-            </div>
-        `;
     } catch (error) {
         console.error('Error cargando reportes:', error);
-        alert('Error al cargar reportes');
+        alert('Error al cargar reportes: ' + error.message);
+        
+        // Mostrar mensaje de error en lugar de dejar vacío
+        document.getElementById('statsEmpleados').innerHTML = '<p style="text-align: center; color: #c53030;">Error al cargar información de empleados</p>';
     }
 }
 
