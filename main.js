@@ -11,6 +11,22 @@ async function apiFetch(endpoint, options = {}) {
     });
 }
 
+// Función para convertir fecha a hora local de Colombia
+function convertirAHoraLocal(fechaString) {
+    if (!fechaString) return 'N/A';
+    
+    // Crear objeto Date desde la fecha del servidor
+    const fecha = new Date(fechaString);
+    
+    // Convertir a hora local con formato HH:MM
+    return fecha.toLocaleTimeString('es-CO', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: 'America/Bogota'  // Zona horaria de Colombia
+    });
+}
+
 function actualizarPrecio() {
     const select = document.getElementById('servicio');
     const costoInput = document.getElementById('costo');
@@ -164,7 +180,7 @@ async function cargarServicios() {
         
         tbody.innerHTML = servicios.map(s => `
             <tr>
-                <td>${s.fecha || 'N/A'}</td>
+                <td>${convertirAHoraLocal(s.fecha)}</td>
                 <td>${s.empleado}</td>
                 <td>${s.servicio}</td>
                 <td>$${parseFloat(s.costo || 0).toLocaleString('es-CO')}</td>
@@ -192,7 +208,7 @@ async function cargarGastos() {
         
         tbody.innerHTML = gastos.map(g => `
             <tr>
-                <td>${g.fecha || 'N/A'}</td>
+                <td>${convertirAHoraLocal(g.fecha)}</td>
                 <td>${g.concepto}</td>
                 <td>$${parseFloat(g.monto || 0).toLocaleString('es-CO')}</td>
                 <td><button class="delete-btn" onclick="eliminar('gasto', ${g.id})">Eliminar</button></td>
@@ -217,7 +233,7 @@ async function cargarPrestamos() {
         
         tbody.innerHTML = prestamos.map(p => `
             <tr>
-                <td>${p.fecha || 'N/A'}</td>
+                <td>${convertirAHoraLocal(p.fecha)}</td>
                 <td>${p.prestatario}</td>
                 <td>${p.concepto}</td>
                 <td>$${parseFloat(p.monto || 0).toLocaleString('es-CO')}</td>
@@ -242,7 +258,7 @@ async function cargarReportes() {
         
         console.log('Reportes recibidos:', reportes);
 
-        // STATS GENERALES - CAMBIADO: Ganancia Total en lugar de Gastos Fijos
+        // STATS GENERALES - Total Ganancias en lugar de Gastos Fijos
         document.getElementById('statsGenerales').innerHTML = `
             <div class="stat-card">
                 <h3>Total Servicios</h3>
