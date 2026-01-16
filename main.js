@@ -275,11 +275,11 @@ async function cargarReportes() {
 
         // Empleados - TODOS AZUL CLARO
         const coloresEmpleados = {
-            'David': '#3b82f6',
-            'Luis': '#3b82f6',
-            'Norwin': '#3b82f6',
-            'Sergio': '#3b82f6',
-            'Juan': '#3b82f6'
+            'David': '#f00000',
+            'Luis': '#f00000',
+            'Norwin': '#f00000',
+            'Sergio': '#f00000',
+            'Juan': '#f00000'
         };
 
         let empleadosHTML = '';
@@ -374,3 +374,4 @@ window.addEventListener('DOMContentLoaded', () => {
     cargarGastos();
     cargarPrestamos();
 });
+
