@@ -303,10 +303,6 @@ def obtener_reportes():
             salarios[empleado] = {
                 'total_servicios': float(total_servicios_con_propina),
                 'num_servicios': num_servicios,
-                'num_especiales': num_especiales,
-                'propinaTotal': float(propina_total),
-                'salarioBase': float(salario_base),
-                'salarioConPropinas': float(salario_con_propinas),
                 'prestamos': float(prestamos_emp)
             }
         
@@ -383,6 +379,7 @@ def eliminar(tipo, id):
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
+
 
 
 
