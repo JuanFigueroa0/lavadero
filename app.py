@@ -255,6 +255,7 @@ def obtener_reportes():
         salarios = {}
         dinero_caja_empleados = 0
         
+        # EMPLEADOS: David, Luis, Norwin, Sergio
         for empleado in ['David', 'Luis', 'Norwin', 'Sergio']:
             servicios_emp = [s for s in servicios if s.get('empleado') == empleado]
             prestamos_emp = sum(float(p['monto']) for p in prestamos if p.get('prestatario') == empleado)
@@ -303,39 +304,44 @@ def obtener_reportes():
             salarios[empleado] = {
                 'total_servicios': float(total_servicios_con_propina),
                 'num_servicios': num_servicios,
+                'num_especiales': num_especiales,
+                'propinaTotal': float(propina_total),
+                'salarioBase': float(salario_base),
+                'salarioConPropinas': float(salario_con_propinas),
                 'prestamos': float(prestamos_emp)
             }
         
-        # Juan
+        # JUAN - Simplificado
         total_servicios_realizados = len(servicios)
         prestamos_juan = sum(float(p['monto']) for p in prestamos if p.get('prestatario') == 'Juan')
         juan_salario_base = total_servicios_realizados * 1000
         juan_salario_final = juan_salario_base - prestamos_juan
         
         salarios['Juan'] = {
-            'total_servicios': float(juan_salario_base),
             'num_servicios': total_servicios_realizados,
-            'num_especiales': 0,
-            'propinaTotal': 0,
             'salarioBase': float(juan_salario_base),
             'salarioConPropinas': float(juan_salario_final),
-            'prestamos': float(prestamos_juan)
+            'prestamos': float(prestamos_juan),
+            'num_especiales': 0,
+            'propinaTotal': 0
         }
         dinero_caja_empleados += juan_salario_final
         
-        # LÓGICA CORREGIDA: Ganancia Neta
+        # LÓGICA: Ganancia Neta
         total_sueldos_empleados = sum(emp['salarioConPropinas'] for emp in salarios.values())
         gastos_fijos = 130000
         ganancia_neta = ingresos_totales - gastos_fijos - total_sueldos_empleados
         
         efectivo_en_caja = ingresos_efectivo - gastos_totales - prestamos_totales
         
+        print(f"DEBUG - Salarios calculados: {salarios}")  # LOG DE DEBUGGING
+        
         return jsonify({
             'ingresosEfectivo': float(ingresos_efectivo),
             'ingresosTransferencia': float(ingresos_transferencia),
             'ingresosTotales': float(ingresos_totales),
             'gastosTotales': float(gastos_totales),
-            'gastosFijos': gastos_fijos,  # NUEVO
+            'gastosFijos': gastos_fijos,
             'prestamosTotales': float(prestamos_totales),
             'totalSueldosEmpleados': float(total_sueldos_empleados),
             'gananciaNeta': float(ganancia_neta),
@@ -346,7 +352,7 @@ def obtener_reportes():
         })
     except Exception as e:
         import traceback
-        print(f"Error en obtener_reportes: {e}")
+        print(f"ERROR en obtener_reportes: {e}")
         print(traceback.format_exc())
         return jsonify({'error': f'Error al obtener reportes: {str(e)}'}), 500
 
@@ -379,6 +385,7 @@ def eliminar(tipo, id):
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
+
 
 
 
