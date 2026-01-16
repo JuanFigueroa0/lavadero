@@ -223,6 +223,7 @@ def obtener_prestamos():
     except Exception as e:
         print(f"Error en obtener_prestamos: {e}")
         return jsonify([]), 500
+
 @app.route('/api/reportes')
 def obtener_reportes():
     try:
@@ -264,8 +265,8 @@ def obtener_reportes():
                     'num_servicios': 0,
                     'num_especiales': 0,
                     'propinaTotal': 0,
-                    'salarioBase': 0,  # Nuevo: salario previo a propinas
-                    'salarioConPropinas': -prestamos_emp if prestamos_emp > 0 else 0,  # Salario final
+                    'salarioBase': 0,
+                    'salarioConPropinas': -prestamos_emp if prestamos_emp > 0 else 0,
                     'prestamos': prestamos_emp
                 }
                 continue
@@ -279,20 +280,14 @@ def obtener_reportes():
             )
             num_normales = num_servicios - num_especiales
             
-            # SERVICIOS BASE (SIN propinas) para descuentos
             servicios_base = sum(float(s['costo']) for s in servicios_emp)
-            
             descuento_normales = float(num_normales * 1000)
             descuento_especiales = float(num_especiales * 2000)
             descuento_total = descuento_normales + descuento_especiales
-            
             base_descontada = servicios_base - descuento_total
             base_40_porciento = base_descontada * 0.40
             
-            # SALARIO BASE (PREVIO A PROPINAS)
             salario_base = base_40_porciento
-            
-            # SALARIO FINAL = BASE + 100% PROPINAS - préstamos
             salario_con_propinas = salario_base + propina_total
             
             if empleado == 'David':
@@ -301,7 +296,6 @@ def obtener_reportes():
                 salario_con_propinas += devolucion_normales + devolucion_especiales
             
             salario_con_propinas -= prestamos_emp
-            
             dinero_caja_empleados += salario_con_propinas
             
             total_servicios_con_propina = servicios_base + propina_total
@@ -311,15 +305,15 @@ def obtener_reportes():
                 'num_servicios': num_servicios,
                 'num_especiales': num_especiales,
                 'propinaTotal': float(propina_total),
-                'salarioBase': float(salario_base),  # Nuevo: salario previo a propinas
-                'salarioConPropinas': float(salario_con_propinas),  # Salario final con propinas
+                'salarioBase': float(salario_base),
+                'salarioConPropinas': float(salario_con_propinas),
                 'prestamos': float(prestamos_emp)
             }
         
-        # Juan NO cambia (no hace servicios)
+        # Juan
         total_servicios_realizados = len(servicios)
         prestamos_juan = sum(float(p['monto']) for p in prestamos if p.get('prestatario') == 'Juan')
-        juan_salario_base = total_servicios_realizados * 1000  # Salario base de Juan
+        juan_salario_base = total_servicios_realizados * 1000
         juan_salario_final = juan_salario_base - prestamos_juan
         
         salarios['Juan'] = {
@@ -327,15 +321,16 @@ def obtener_reportes():
             'num_servicios': total_servicios_realizados,
             'num_especiales': 0,
             'propinaTotal': 0,
-            'salarioBase': float(juan_salario_base),  # Nuevo: salario previo a propinas (sin descuentos)
-            'salarioConPropinas': float(juan_salario_final),  # Salario final
+            'salarioBase': float(juan_salario_base),
+            'salarioConPropinas': float(juan_salario_final),
             'prestamos': float(prestamos_juan)
         }
         dinero_caja_empleados += juan_salario_final
         
-        # Ganancia neta: resta TODOS los 5 sueldos FINALES (incluyendo propinas)
+        # LÓGICA CORREGIDA: Ganancia Neta
         total_sueldos_empleados = sum(emp['salarioConPropinas'] for emp in salarios.values())
-        ganancia_neta = ingresos_totales - gastos_totales - prestamos_totales - total_sueldos_empleados
+        gastos_fijos = 130000
+        ganancia_neta = ingresos_totales - gastos_fijos - total_sueldos_empleados
         
         efectivo_en_caja = ingresos_efectivo - gastos_totales - prestamos_totales
         
@@ -344,12 +339,13 @@ def obtener_reportes():
             'ingresosTransferencia': float(ingresos_transferencia),
             'ingresosTotales': float(ingresos_totales),
             'gastosTotales': float(gastos_totales),
+            'gastosFijos': gastos_fijos,  # NUEVO
             'prestamosTotales': float(prestamos_totales),
+            'totalSueldosEmpleados': float(total_sueldos_empleados),
             'gananciaNeta': float(ganancia_neta),
             'efectivoEnCaja': float(efectivo_en_caja),
             'dineroCajaEmpleados': float(dinero_caja_empleados),
             'totalServicios': total_servicios_realizados,
-            'totalSueldosEmpleados': float(total_sueldos_empleados),
             'porEmpleado': salarios
         })
     except Exception as e:
@@ -357,7 +353,6 @@ def obtener_reportes():
         print(f"Error en obtener_reportes: {e}")
         print(traceback.format_exc())
         return jsonify({'error': f'Error al obtener reportes: {str(e)}'}), 500
-
 
 @app.route('/api/<tipo>/<int:id>', methods=['DELETE'])
 def eliminar(tipo, id):
@@ -388,6 +383,7 @@ def eliminar(tipo, id):
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
+
 
 
 
