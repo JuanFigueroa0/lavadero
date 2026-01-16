@@ -147,7 +147,7 @@ tr:hover {
 
 /* NUEVA PALETA SÓLIDA: Colores planos claros */
 .stat-card {
-    background: #3b82f6;  /* Azul claro sólido */
+    background: #f00000;  /* Azul claro sólido */
     color: white;
     padding: 20px;
     border-radius: 10px;
@@ -170,7 +170,7 @@ tr:hover {
 }
 
 .stat-card.empleado {
-    background: #3b82f6 !important;  /* MISMO AZUL para TODOS */
+    background: #f00000 !important;  /* MISMO AZUL para TODOS */
     padding: 25px !important;
     border-radius: 20px !important;
     box-shadow: 0 10px 30px rgba(0,0,0,0.2) !important;
@@ -387,3 +387,4 @@ tr:hover {
         font-size: 15px;
     }
 }
+
