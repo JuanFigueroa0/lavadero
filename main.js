@@ -1,6 +1,5 @@
 const API_BASE_URL = 'https://lavadero-ubdd.onrender.com/api';
 
-// Función para hacer fetch con la URL base
 async function apiFetch(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
     return fetch(url, {
@@ -20,13 +19,12 @@ function actualizarPrecio() {
     
     if (precio) {
         costoInput.value = precio;
-        costoInput.style.background = '#e8f4f8'; // Color neutro para indicar editable
+        costoInput.style.background = '#e8f4f8';
     } else {
         costoInput.value = '';
     }
 }
 
-// Control de propina
 document.addEventListener('DOMContentLoaded', function() {
     const hayPropinaSelect = document.getElementById('hayPropina');
     const grupoPropina = document.getElementById('grupoPropina');
@@ -59,7 +57,6 @@ function openTab(tabName) {
     }
 }
 
-// Registrar Servicio
 document.getElementById('formServicio').addEventListener('submit', async (e) => {
     e.preventDefault();
     const hayPropina = document.getElementById('hayPropina').value === 'si';
@@ -70,7 +67,7 @@ document.getElementById('formServicio').addEventListener('submit', async (e) => 
     const data = {
         empleado: document.getElementById('empleado').value,
         servicio: document.getElementById('servicio').value,
-        costo: costoFinal,  // Usa el valor editado por el usuario
+        costo: costoFinal,
         metodoPago: document.getElementById('metodoPago').value,
         propina: propina
     };
@@ -99,7 +96,6 @@ document.getElementById('formServicio').addEventListener('submit', async (e) => 
     }
 });
 
-// Registrar Gasto
 document.getElementById('formGasto').addEventListener('submit', async (e) => {
     e.preventDefault();
     const data = {
@@ -127,7 +123,6 @@ document.getElementById('formGasto').addEventListener('submit', async (e) => {
     }
 });
 
-// Registrar Préstamo
 document.getElementById('formPrestamo').addEventListener('submit', async (e) => {
     e.preventDefault();
     const data = {
@@ -240,34 +235,35 @@ async function cargarReportes() {
         const res = await apiFetch('/reportes');
         const reportes = await res.json();
 
-        // Stats generales (sin cambios)
+        // STATS GENERALES CORREGIDOS
         document.getElementById('statsGenerales').innerHTML = `
             <div class="stat-card">
-                <h3>Total de Servicios Realizados</h3>
+                <h3>Total Servicios</h3>
                 <div class="value">${reportes.totalServicios || 0}</div>
             </div>
             <div class="stat-card">
-                <h3>Ingresos en Efectivo</h3>
+                <h3>Ingresos Efectivo</h3>
                 <div class="value">$${(reportes.ingresosEfectivo || 0).toLocaleString('es-CO')}</div>
             </div>
             <div class="stat-card">
-                <h3>Ingresos por Transferencia</h3>
+                <h3>Ingresos Transferencia</h3>
                 <div class="value">$${(reportes.ingresosTransferencia || 0).toLocaleString('es-CO')}</div>
             </div>
             <div class="stat-card">
-                <h3>Ingresos Totales</h3>
-                <div class="value">$${(reportes.ingresosTotales || 0).toLocaleString('es-CO')}</div>
+                <h3>Gastos Fijos</h3>
+                <div class="value">$${reportes.gastosFijos?.toLocaleString('es-CO') || '130,000'}</div>
             </div>
             <div class="stat-card highlight">
-                <h3>Ganancia Neta</h3>
+                <h3>Ganancia Neta Final</h3>
                 <div class="value ganancia">$${(reportes.gananciaNeta || 0).toLocaleString('es-CO')}</div>
+                <small>Ingresos - 130k - Sueldos</small>
             </div>
         `;
 
-        // Caja (azul profesional)
+        // Caja
         document.getElementById('statsCaja').innerHTML = `
             <div class="stat-card caja">
-                <h3>💰 Efectivo en Caja</h3>
+                <h3>Efectivo en Caja</h3>
                 <div class="value grande">$${(reportes.efectivoEnCaja || 0).toLocaleString('es-CO')}</div>
                 <small>
                     Efectivo: $${(reportes.ingresosEfectivo || 0).toLocaleString('es-CO')}<br>
@@ -277,55 +273,54 @@ async function cargarReportes() {
             </div>
         `;
 
-        // 🎨 NUEVA PALETA: Empleados con colores únicos y hermosos
-        if (document.getElementById('statsEmpleados')) {
-            const coloresEmpleados = {
-                'David': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',    // Azul-Púrpura
-                'Luis': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',     // Rosa
-                'Norwin': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',   // Cian
-                'Sergio': 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',   // Verde menta
-                'Juan': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'      // Naranja-Rosa
-            };
+        // Empleados - TODOS AZUL CLARO
+        const coloresEmpleados = {
+            'David': '#3b82f6',
+            'Luis': '#3b82f6',
+            'Norwin': '#3b82f6',
+            'Sergio': '#3b82f6',
+            'Juan': '#3b82f6'
+        };
 
-            let empleadosHTML = '';
-            if (reportes.porEmpleado) {
-                Object.entries(reportes.porEmpleado).forEach(([empleado, datos]) => {
-                    const salarioBase = parseFloat(datos.salarioBase || 0);
-                    const salarioFinal = parseFloat(datos.salarioConPropinas || 0);
-                    const aumento = salarioFinal - salarioBase;
-                    const numSencillos = (datos.num_servicios || 0) - (datos.num_especiales || 0);
-                    const color = coloresEmpleados[empleado] || 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)';
-                    
-                    empleadosHTML += `
-                        <div class="stat-card empleado" style="background: ${color}; border: 2px solid rgba(255,255,255,0.3);">
-                            <h3 style="color: white; margin-bottom: 8px;"> ${empleado}</h3>
-                            <div class="value-sueldo">
-                                <span class="salario-base">$${salarioBase.toLocaleString('es-CO')}</span>
-                                <span class="flecha">➜</span>
-                                <span class="salario-final">$${salarioFinal.toLocaleString('es-CO')}</span>
-                            </div>
-                            <div class="detalles">
-                                <div><strong> Servicios:</strong> ${datos.num_servicios || 0} (${numSencillos} simples, ${datos.num_especiales || 0} especiales)</div>
-                                <div class="propina"><strong> Propinas:</strong> +$${parseFloat(datos.propinaTotal || 0).toLocaleString('es-CO')}</div>
-                                <div class="aumento"><strong> Aumento:</strong> <span style="color: #fff; font-weight: bold;">+$${aumento.toLocaleString('es-CO')}</span></div>
-                                ${ (datos.prestamos || 0) > 0 ? `<div class="prestamo"><strong> Préstamo:</strong> -$${(datos.prestamos || 0).toLocaleString('es-CO')}</div>` : ''}
-                            </div>
+        let empleadosHTML = '';
+        if (reportes.porEmpleado) {
+            Object.entries(reportes.porEmpleado).forEach(([empleado, datos]) => {
+                const salarioBase = parseFloat(datos.salarioBase || 0);
+                const salarioFinal = parseFloat(datos.salarioConPropinas || 0);
+                const aumento = salarioFinal - salarioBase;
+                const numSencillos = (datos.num_servicios || 0) - (datos.num_especiales || 0);
+                const color = coloresEmpleados[empleado];
+                
+                empleadosHTML += `
+                    <div class="stat-card empleado" style="background: ${color};">
+                        <h3>${empleado}</h3>
+                        <div class="value-sueldo">
+                            <span class="salario-base">$${salarioBase.toLocaleString('es-CO')}</span>
+                            <span class="flecha">➜</span>
+                            <span class="salario-final">$${salarioFinal.toLocaleString('es-CO')}</span>
                         </div>
-                    `;
-                });
-            }
-            
-            document.getElementById('statsEmpleados').innerHTML = `
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
-                    ${empleadosHTML}
-                </div>
-            `;
+                        <div class="detalles">
+                            <div><strong>Servicios:</strong> ${datos.num_servicios || 0} (${numSencillos} simples, ${datos.num_especiales || 0} especiales)</div>
+                            <div class="propina"><strong>Propinas:</strong> +$${parseFloat(datos.propinaTotal || 0).toLocaleString('es-CO')}</div>
+                            <div class="aumento"><strong>Aumento:</strong> +$${aumento.toLocaleString('es-CO')}</div>
+                            ${(datos.prestamos || 0) > 0 ? `<div class="prestamo"><strong>Préstamo:</strong> -$${(datos.prestamos || 0).toLocaleString('es-CO')}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
         }
+        
+        document.getElementById('statsEmpleados').innerHTML = `
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+                ${empleadosHTML}
+            </div>
+        `;
     } catch (error) {
         console.error('Error cargando reportes:', error);
         alert('Error al cargar reportes');
     }
 }
+
 async function eliminar(tipo, id) {
     if (!confirm('¿Estás seguro de eliminar este registro?')) return;
     
@@ -348,7 +343,7 @@ async function eliminar(tipo, id) {
 }
 
 async function cerrarDia() {
-    if (!confirm('Cerrar el dia')) {
+    if (!confirm('¿Cerrar el día? Esto eliminará TODOS los registros.')) {
         return;
     }
     
@@ -366,18 +361,16 @@ async function cerrarDia() {
             cargarPrestamos();
             cargarReportes();
         } else {
-            alert('❌ Error: ' + (result.error || 'Error desconocido'));
+            alert('Error: ' + (result.error || 'Error desconocido'));
         }
     } catch (error) {
         console.error('Error cerrando día:', error);
-        alert('❌ Error de conexión al cerrar día');
+        alert('Error de conexión al cerrar día');
     }
 }
 
-// Cargar datos al inicio
 window.addEventListener('DOMContentLoaded', () => {
     cargarServicios();
     cargarGastos();
     cargarPrestamos();
 });
-
