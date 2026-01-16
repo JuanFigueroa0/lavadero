@@ -264,7 +264,8 @@ def obtener_reportes():
                     'num_servicios': 0,
                     'num_especiales': 0,
                     'propinaTotal': 0,
-                    'salario': -prestamos_emp if prestamos_emp > 0 else 0,
+                    'salarioBase': 0,  # Nuevo: salario previo a propinas
+                    'salarioConPropinas': -prestamos_emp if prestamos_emp > 0 else 0,  # Salario final
                     'prestamos': prestamos_emp
                 }
                 continue
@@ -288,17 +289,20 @@ def obtener_reportes():
             base_descontada = servicios_base - descuento_total
             base_40_porciento = base_descontada * 0.40
             
-            # AGREGAR 100% PROPINAS al salario
-            salario_base = base_40_porciento + propina_total
+            # SALARIO BASE (PREVIO A PROPINAS)
+            salario_base = base_40_porciento
+            
+            # SALARIO FINAL = BASE + 100% PROPINAS - préstamos
+            salario_con_propinas = salario_base + propina_total
             
             if empleado == 'David':
                 devolucion_normales = float(num_normales * 1000)
                 devolucion_especiales = float(num_especiales * 1000)
-                salario = salario_base + devolucion_normales + devolucion_especiales - prestamos_emp
-            else:
-                salario = salario_base - prestamos_emp
+                salario_con_propinas += devolucion_normales + devolucion_especiales
             
-            dinero_caja_empleados += salario
+            salario_con_propinas -= prestamos_emp
+            
+            dinero_caja_empleados += salario_con_propinas
             
             total_servicios_con_propina = servicios_base + propina_total
             
@@ -307,26 +311,30 @@ def obtener_reportes():
                 'num_servicios': num_servicios,
                 'num_especiales': num_especiales,
                 'propinaTotal': float(propina_total),
-                'salario': float(salario),
+                'salarioBase': float(salario_base),  # Nuevo: salario previo a propinas
+                'salarioConPropinas': float(salario_con_propinas),  # Salario final con propinas
                 'prestamos': float(prestamos_emp)
             }
         
         # Juan NO cambia (no hace servicios)
         total_servicios_realizados = len(servicios)
         prestamos_juan = sum(float(p['monto']) for p in prestamos if p.get('prestatario') == 'Juan')
-        juan_salario = (total_servicios_realizados * 1000) - prestamos_juan
+        juan_salario_base = total_servicios_realizados * 1000  # Salario base de Juan
+        juan_salario_final = juan_salario_base - prestamos_juan
+        
         salarios['Juan'] = {
-            'total_servicios': float(total_servicios_realizados * 1000),
+            'total_servicios': float(juan_salario_base),
             'num_servicios': total_servicios_realizados,
             'num_especiales': 0,
             'propinaTotal': 0,
-            'salario': float(juan_salario),
+            'salarioBase': float(juan_salario_base),  # Nuevo: salario previo a propinas (sin descuentos)
+            'salarioConPropinas': float(juan_salario_final),  # Salario final
             'prestamos': float(prestamos_juan)
         }
-        dinero_caja_empleados += juan_salario
+        dinero_caja_empleados += juan_salario_final
         
-        # Ganancia neta: resta TODOS los sueldos (incluyendo propinas)
-        total_sueldos_empleados = sum(emp['salario'] for emp in salarios.values())
+        # Ganancia neta: resta TODOS los 5 sueldos FINALES (incluyendo propinas)
+        total_sueldos_empleados = sum(emp['salarioConPropinas'] for emp in salarios.values())
         ganancia_neta = ingresos_totales - gastos_totales - prestamos_totales - total_sueldos_empleados
         
         efectivo_en_caja = ingresos_efectivo - gastos_totales - prestamos_totales
@@ -380,6 +388,7 @@ def eliminar(tipo, id):
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
+
 
 
 
