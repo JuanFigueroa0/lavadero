@@ -264,6 +264,7 @@ def obtener_reportes():
                     'total_servicios': 0,
                     'num_servicios': 0,
                     'num_especiales': 0,
+                    'propinaTotal': 0,
                     'salario': -prestamos_emp if prestamos_emp > 0 else 0,
                     'prestamos': prestamos_emp
                 }
@@ -271,6 +272,7 @@ def obtener_reportes():
             
             # Total servicios + propinas para este empleado
             total_servicios = sum(float(s['costo']) + float(s.get('propina', 0)) for s in servicios_emp)
+            propina_total = sum(float(s.get('propina', 0)) for s in servicios_emp)
             num_servicios = len(servicios_emp)
             num_especiales = sum(
                 1 for s in servicios_emp 
@@ -299,6 +301,7 @@ def obtener_reportes():
                 'total_servicios': float(total_servicios),
                 'num_servicios': num_servicios,
                 'num_especiales': num_especiales,
+                'propinaTotal': float(propina_total),
                 'salario': float(salario),
                 'prestamos': float(prestamos_emp)
             }
@@ -308,15 +311,16 @@ def obtener_reportes():
         prestamos_juan = sum(float(p['monto']) for p in prestamos if p.get('prestatario') == 'Juan')
         juan_salario = (total_servicios_realizados * 1000) - prestamos_juan
         salarios['Juan'] = {
-            'total_servicios': float(total_servicios_realizados * 1000),  # Solo para mostrar valor
+            'total_servicios': float(total_servicios_realizados * 1000),
             'num_servicios': total_servicios_realizados,
             'num_especiales': 0,
+            'propinaTotal': 0,
             'salario': float(juan_salario),
             'prestamos': float(prestamos_juan)
         }
         dinero_caja_empleados += juan_salario
         
-        # Ganancia neta CORREGIDA: resta TODOS los sueldos
+        # Ganancia neta: resta TODOS los sueldos
         total_sueldos_empleados = sum(emp['salario'] for emp in salarios.values())
         ganancia_neta = ingresos_totales - gastos_totales - prestamos_totales - total_sueldos_empleados
         
@@ -332,14 +336,15 @@ def obtener_reportes():
             'efectivoEnCaja': float(efectivo_en_caja),
             'dineroCajaEmpleados': float(dinero_caja_empleados),
             'totalServicios': total_servicios_realizados,
-            'porEmpleado': salarios,
-            'totalSueldosEmpleados': float(total_sueldos_empleados)  # Para debug
+            'totalSueldosEmpleados': float(total_sueldos_empleados),
+            'porEmpleado': salarios
         })
     except Exception as e:
         import traceback
         print(f"Error en obtener_reportes: {e}")
         print(traceback.format_exc())
         return jsonify({'error': f'Error al obtener reportes: {str(e)}'}), 500
+
 
 @app.route('/api/<tipo>/<int:id>', methods=['DELETE'])
 def eliminar(tipo, id):
@@ -370,4 +375,5 @@ def eliminar(tipo, id):
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
+
 
