@@ -235,7 +235,7 @@ async function cargarReportes() {
         const res = await apiFetch('/reportes');
         const reportes = await res.json();
 
-        // STATS GENERALES CORREGIDOS
+        // STATS GENERALES
         document.getElementById('statsGenerales').innerHTML = `
             <div class="stat-card">
                 <h3>Total Servicios</h3>
@@ -272,40 +272,57 @@ async function cargarReportes() {
             </div>
         `;
 
-        // Empleados - TODOS AZUL CLARO
-        const coloresEmpleados = {
-            'David': '#ffffff',
-            'Luis': '#ffffff',
-            'Norwin': '#ffffff',
-            'Sergio': '#ffffff',
-            'Juan': '#ffffff'
-        };
-
+        // Orden personalizado: David, Luis, Norwin, Sergio, Juan al final
+        const ordenEmpleados = ['David', 'Luis', 'Norwin', 'Sergio', 'Juan'];
+        
         let empleadosHTML = '';
         if (reportes.porEmpleado) {
-            Object.entries(reportes.porEmpleado).forEach(([empleado, datos]) => {
+            // Ordenar empleados según el array ordenEmpleados
+            const empleadosOrdenados = Object.entries(reportes.porEmpleado).sort((a, b) => {
+                const indexA = ordenEmpleados.indexOf(a[0]);
+                const indexB = ordenEmpleados.indexOf(b[0]);
+                return indexA - indexB;
+            });
+
+            empleadosOrdenados.forEach(([empleado, datos]) => {
                 const salarioBase = parseFloat(datos.salarioBase || 0);
                 const salarioFinal = parseFloat(datos.salarioConPropinas || 0);
                 const aumento = salarioFinal - salarioBase;
                 const numSencillos = (datos.num_servicios || 0) - (datos.num_especiales || 0);
-                const color = coloresEmpleados[empleado];
                 
-                empleadosHTML += `
-                    <div class="stat-card empleado" style="background: ${color};">
-                        <h3>${empleado}</h3>
-                        <div class="value-sueldo">
-                            <span class="salario-base">$${salarioBase.toLocaleString('es-CO')}</span>
-                            <span class="flecha">➜</span>
-                            <span class="salario-final">$${salarioFinal.toLocaleString('es-CO')}</span>
+                // JUAN - Versión simplificada
+                if (empleado === 'Juan') {
+                    empleadosHTML += `
+                        <div class="stat-card empleado" style="background: #ffffff;">
+                            <h3>${empleado}</h3>
+                            <div class="value-sueldo">
+                                <span class="salario-final">$${salarioFinal.toLocaleString('es-CO')}</span>
+                            </div>
+                            <div class="detalles">
+                                <div><strong>Servicios totales:</strong> ${datos.num_servicios || 0}</div>
+                                ${(datos.prestamos || 0) > 0 ? `<div class="prestamo"><strong>Préstamo:</strong> -$${(datos.prestamos || 0).toLocaleString('es-CO')}</div>` : ''}
+                            </div>
                         </div>
-                        <div class="detalles">
-                            <div><strong>Servicios:</strong> ${datos.num_servicios || 0} (${numSencillos} simples, ${datos.num_especiales || 0} especiales)</div>
-                            <div class="propina"><strong>Propinas:</strong> +$${parseFloat(datos.propinaTotal || 0).toLocaleString('es-CO')}</div>
-                            <div class="aumento"><strong>Aumento:</strong> +$${aumento.toLocaleString('es-CO')}</div>
-                            ${(datos.prestamos || 0) > 0 ? `<div class="prestamo"><strong>Préstamo:</strong> -$${(datos.prestamos || 0).toLocaleString('es-CO')}</div>` : ''}
+                    `;
+                } else {
+                    // OTROS EMPLEADOS - Versión completa
+                    empleadosHTML += `
+                        <div class="stat-card empleado" style="background: #ffffff;">
+                            <h3>${empleado}</h3>
+                            <div class="value-sueldo">
+                                <span class="salario-base">$${salarioBase.toLocaleString('es-CO')}</span>
+                                <span class="flecha">➜</span>
+                                <span class="salario-final">$${salarioFinal.toLocaleString('es-CO')}</span>
+                            </div>
+                            <div class="detalles">
+                                <div><strong>Servicios:</strong> ${datos.num_servicios || 0} (${numSencillos} simples, ${datos.num_especiales || 0} especiales)</div>
+                                <div class="propina"><strong>Propinas:</strong> +$${parseFloat(datos.propinaTotal || 0).toLocaleString('es-CO')}</div>
+                                <div class="aumento"><strong>Aumento:</strong> +$${aumento.toLocaleString('es-CO')}</div>
+                                ${(datos.prestamos || 0) > 0 ? `<div class="prestamo"><strong>Préstamo:</strong> -$${(datos.prestamos || 0).toLocaleString('es-CO')}</div>` : ''}
+                            </div>
                         </div>
-                    </div>
-                `;
+                    `;
+                }
             });
         }
         
@@ -373,5 +390,3 @@ window.addEventListener('DOMContentLoaded', () => {
     cargarGastos();
     cargarPrestamos();
 });
-
-
