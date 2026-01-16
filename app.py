@@ -5,7 +5,7 @@ from config import DB_CONFIG
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app, origins=["https://juanfigueroa0.github.io/lavadero", "http://localhost:3000"])
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 def get_db_connection():
     """Obtiene una conexión a la base de datos"""
@@ -37,8 +37,21 @@ def formatear_hora_desde_fecha(valor):
 
 
 @app.route('/')
-def index():
-    return render_template('index.html')
+return jsonify({
+        "status": "OK",
+        "message": "🚗 Lavadero API activa - Frontend en GitHub Pages",
+        "version": "1.0",
+        "endpoints": {
+            "POST /api/servicio": "Registrar servicio",
+            "GET /api/servicios": "Listar servicios", 
+            "POST /api/gasto": "Registrar gasto",
+            "GET /api/gastos": "Listar gastos",
+            "POST /api/prestamo": "Registrar préstamo",
+            "GET /api/prestamos": "Listar préstamos",
+            "GET /api/reportes": "Estadísticas",
+            "POST /api/cerrar-dia": "Resetear día"
+        }
+    })
 
 @app.route('/api/cerrar-dia', methods=['POST'])
 def cerrar_dia():
@@ -349,4 +362,5 @@ def eliminar(tipo, id):
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
+
 
