@@ -242,7 +242,7 @@ async function cargarReportes() {
         
         console.log('Reportes recibidos:', reportes);
 
-        // STATS GENERALES
+        // STATS GENERALES - CAMBIADO: Ganancia Total en lugar de Gastos Fijos
         document.getElementById('statsGenerales').innerHTML = `
             <div class="stat-card">
                 <h3>Total Servicios</h3>
@@ -257,8 +257,8 @@ async function cargarReportes() {
                 <div class="value">$${(reportes.ingresosTransferencia || 0).toLocaleString('es-CO')}</div>
             </div>
             <div class="stat-card">
-                <h3>Gastos Fijos</h3>
-                <div class="value">$${(reportes.gastosFijos || 130000).toLocaleString('es-CO')}</div>
+                <h3>Total Ganancias</h3>
+                <div class="value">$${(reportes.ingresosTotales || 0).toLocaleString('es-CO')}</div>
             </div>
             <div class="stat-card highlight">
                 <h3>Ganancia Neta Final</h3>
@@ -297,6 +297,7 @@ async function cargarReportes() {
             empleadosOrdenados.forEach(([empleado, datos]) => {
                 const salarioBase = parseFloat(datos.salarioBase || 0);
                 const salarioFinal = parseFloat(datos.salarioConPropinas || 0);
+                const totalGenerado = parseFloat(datos.total_servicios || 0);
                 const aumento = salarioFinal - salarioBase;
                 const numSencillos = (datos.num_servicios || 0) - (datos.num_especiales || 0);
                 
@@ -309,13 +310,14 @@ async function cargarReportes() {
                                 <span class="salario-final">$${salarioFinal.toLocaleString('es-CO')}</span>
                             </div>
                             <div class="detalles">
+                                <div><strong>Total generado:</strong> $${totalGenerado.toLocaleString('es-CO')}</div>
                                 <div><strong>Servicios totales:</strong> ${datos.num_servicios || 0}</div>
                                 ${(datos.prestamos || 0) > 0 ? `<div class="prestamo"><strong>Préstamo:</strong> -$${(datos.prestamos || 0).toLocaleString('es-CO')}</div>` : ''}
                             </div>
                         </div>
                     `;
                 } else {
-                    // OTROS EMPLEADOS - Versión completa
+                    // OTROS EMPLEADOS - Versión completa con Total Generado
                     empleadosHTML += `
                         <div class="stat-card empleado">
                             <h3>${empleado}</h3>
@@ -325,6 +327,7 @@ async function cargarReportes() {
                                 <span class="salario-final">$${salarioFinal.toLocaleString('es-CO')}</span>
                             </div>
                             <div class="detalles">
+                                <div><strong>Total generado:</strong> $${totalGenerado.toLocaleString('es-CO')}</div>
                                 <div><strong>Servicios:</strong> ${datos.num_servicios || 0} (${numSencillos} simples, ${datos.num_especiales || 0} especiales)</div>
                                 <div class="propina"><strong>Propinas:</strong> +$${parseFloat(datos.propinaTotal || 0).toLocaleString('es-CO')}</div>
                                 <div class="aumento"><strong>Aumento:</strong> +$${aumento.toLocaleString('es-CO')}</div>
