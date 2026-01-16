@@ -303,20 +303,20 @@ def obtener_reportes():
                 'prestamos': float(prestamos_emp)
             }
         
-        # Agregar Juan: $1000 por cada servicio total realizado
+        # Juan al FINAL: $1000 por cada servicio total realizado - sus préstamos
         total_servicios_realizados = len(servicios)
         prestamos_juan = sum(float(p['monto']) for p in prestamos if p.get('prestatario') == 'Juan')
         juan_salario = (total_servicios_realizados * 1000) - prestamos_juan
         salarios['Juan'] = {
-            'total_servicios': 0,
-            'num_servicios': 0,
+            'total_servicios': float(total_servicios_realizados * 1000),  # Solo para mostrar valor
+            'num_servicios': total_servicios_realizados,
             'num_especiales': 0,
             'salario': float(juan_salario),
             'prestamos': float(prestamos_juan)
         }
         dinero_caja_empleados += juan_salario
         
-        # Ganancia neta restando TOTAL sueldos empleados
+        # Ganancia neta CORREGIDA: resta TODOS los sueldos
         total_sueldos_empleados = sum(emp['salario'] for emp in salarios.values())
         ganancia_neta = ingresos_totales - gastos_totales - prestamos_totales - total_sueldos_empleados
         
@@ -332,7 +332,8 @@ def obtener_reportes():
             'efectivoEnCaja': float(efectivo_en_caja),
             'dineroCajaEmpleados': float(dinero_caja_empleados),
             'totalServicios': total_servicios_realizados,
-            'porEmpleado': salarios
+            'porEmpleado': salarios,
+            'totalSueldosEmpleados': float(total_sueldos_empleados)  # Para debug
         })
     except Exception as e:
         import traceback
@@ -369,3 +370,4 @@ def eliminar(tipo, id):
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
+
