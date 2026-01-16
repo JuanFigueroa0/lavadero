@@ -13,18 +13,35 @@ async function apiFetch(endpoint, options = {}) {
 
 // Función para convertir fecha a hora local de Colombia
 function convertirAHoraLocal(fechaString) {
-    if (!fechaString) return 'N/A';
+    if (!fechaString || fechaString === 'N/A') return 'N/A';
     
-    // Crear objeto Date desde la fecha del servidor
-    const fecha = new Date(fechaString);
-    
-    // Convertir a hora local con formato HH:MM
-    return fecha.toLocaleTimeString('es-CO', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-        timeZone: 'America/Bogota'  // Zona horaria de Colombia
-    });
+    try {
+        // Si ya viene en formato HH:MM, devolverlo directamente
+        if (fechaString.includes(':') && !fechaString.includes('-')) {
+            return fechaString;
+        }
+        
+        // Parsear la fecha del servidor (formato: 'YYYY-MM-DD HH:MM:SS')
+        // Reemplazar espacio por 'T' para formato ISO
+        const fechaISO = fechaString.replace(' ', 'T');
+        const fecha = new Date(fechaISO);
+        
+        // Verificar si la fecha es válida
+        if (isNaN(fecha.getTime())) {
+            console.error('Fecha inválida:', fechaString);
+            return fechaString; // Devolver la fecha original si no se puede parsear
+        }
+        
+        // Convertir a hora local con formato HH:MM
+        return fecha.toLocaleTimeString('es-CO', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        });
+    } catch (error) {
+        console.error('Error al convertir fecha:', fechaString, error);
+        return fechaString; // Devolver la fecha original en caso de error
+    }
 }
 
 function actualizarPrecio() {
@@ -326,7 +343,6 @@ async function cargarReportes() {
                                 <span class="salario-final">$${salarioFinal.toLocaleString('es-CO')}</span>
                             </div>
                             <div class="detalles">
-                                <div><strong>Total generado:</strong> $${totalGenerado.toLocaleString('es-CO')}</div>
                                 <div><strong>Servicios totales:</strong> ${datos.num_servicios || 0}</div>
                                 ${(datos.prestamos || 0) > 0 ? `<div class="prestamo"><strong>Préstamo:</strong> -$${(datos.prestamos || 0).toLocaleString('es-CO')}</div>` : ''}
                             </div>
@@ -422,3 +438,4 @@ window.addEventListener('DOMContentLoaded', () => {
     cargarGastos();
     cargarPrestamos();
 });
+
