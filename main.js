@@ -256,7 +256,6 @@ async function cargarReportes() {
             <div class="stat-card highlight">
                 <h3>Ganancia Neta Final</h3>
                 <div class="value ganancia">$${(reportes.gananciaNeta || 0).toLocaleString('es-CO')}</div>
-                <small>Ingresos - 130k - Sueldos</small>
             </div>
         `;
 
@@ -275,11 +274,11 @@ async function cargarReportes() {
 
         // Empleados - TODOS AZUL CLARO
         const coloresEmpleados = {
-            'David': '#f00000',
-            'Luis': '#f00000',
-            'Norwin': '#f00000',
-            'Sergio': '#f00000',
-            'Juan': '#f00000'
+            'David': '#ffffff',
+            'Luis': '#ffffff',
+            'Norwin': '#ffffff',
+            'Sergio': '#ffffff',
+            'Juan': '#ffffff'
         };
 
         let empleadosHTML = '';
@@ -374,4 +373,5 @@ window.addEventListener('DOMContentLoaded', () => {
     cargarGastos();
     cargarPrestamos();
 });
+
 
