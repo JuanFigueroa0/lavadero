@@ -313,7 +313,7 @@ async function cargarReportes() {
                 <h3>Total Ganancias</h3>
                 <div class="value">$${(reportes.ingresosTotales || 0).toLocaleString('es-CO')}</div>
             </div>
-            <div class="stat-card highlight">
+            <div class="stat-card highlight admin">
                 <h3>Ganancia Administrador</h3>
                 <div class="value ganancia">$${(reportes.gananciaNeta || 0).toLocaleString('es-CO')}</div>
             </div>
@@ -484,6 +484,7 @@ window.addEventListener('DOMContentLoaded', () => {
     cargarGastos();
     cargarPrestamos();
 });
+
 
 
 
