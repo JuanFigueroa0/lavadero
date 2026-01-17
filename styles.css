@@ -167,6 +167,12 @@ tr:hover {
     border: 2px solid #f59e0b;
 }
 
+.stat-card.highlight.admin {
+    background: #ffffff;
+    color: #000000;
+    border: 2px solid #ef4444;
+}
+
 .stat-card.highlight .ganancia {
     color: #000000;
     text-shadow: none;
@@ -394,3 +400,4 @@ tr:hover {
         font-size: 15px;
     }
 }
+
