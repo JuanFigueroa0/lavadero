@@ -3,6 +3,79 @@ const API_BASE_URL = 'https://lavadero-ubdd.onrender.com/api';
 // Variable para controlar el bloqueo
 let isProcessing = false;
 
+// Sistema de notificaciones Toast
+function mostrarToast(titulo, mensaje, tipo = 'info') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${tipo}`;
+    
+    const iconos = {
+        success: '✓',
+        error: '✕',
+        warning: '⚠',
+        info: 'ℹ'
+    };
+    
+    toast.innerHTML = `
+        <div class="toast-icon">${iconos[tipo]}</div>
+        <div class="toast-content">
+            <div class="toast-title">${titulo}</div>
+            ${mensaje ? `<div class="toast-message">${mensaje}</div>` : ''}
+        </div>
+        <button class="toast-close" onclick="cerrarToast(this)">×</button>
+    `;
+    
+    container.appendChild(toast);
+    
+    // Auto-cerrar después de 5 segundos
+    setTimeout(() => {
+        if (toast.parentElement) {
+            cerrarToast(toast.querySelector('.toast-close'));
+        }
+    }, 5000);
+}
+
+function cerrarToast(btn) {
+    const toast = btn.closest('.toast');
+    toast.classList.add('removing');
+    setTimeout(() => {
+        toast.remove();
+    }, 300);
+}
+
+// Sistema de confirmación con modal
+function mostrarConfirmacion(titulo, mensaje) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('confirmModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const confirmBtn = document.getElementById('modalConfirmBtn');
+        
+        modalTitle.textContent = titulo;
+        modalMessage.textContent = mensaje;
+        modal.classList.add('active');
+        
+        // Remover listeners anteriores
+        const newConfirmBtn = confirmBtn.cloneNode(true);
+        confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+        
+        newConfirmBtn.onclick = () => {
+            modal.classList.remove('active');
+            resolve(true);
+        };
+        
+        // Actualizar la referencia global
+        window.cerrarModal = () => {
+            modal.classList.remove('active');
+            resolve(false);
+        };
+    });
+}
+
+function cerrarModal() {
+    document.getElementById('confirmModal').classList.remove('active');
+}
+
 // Funciones de bloqueo
 function bloquearSistema(mensaje = 'Procesando...') {
     isProcessing = true;
@@ -11,7 +84,6 @@ function bloquearSistema(mensaje = 'Procesando...') {
     loadingText.textContent = mensaje;
     overlay.classList.add('active');
     
-    // Deshabilitar todos los botones
     document.querySelectorAll('button').forEach(btn => btn.disabled = true);
 }
 
@@ -20,7 +92,6 @@ function desbloquearSistema() {
     const overlay = document.getElementById('loadingOverlay');
     overlay.classList.remove('active');
     
-    // Rehabilitar todos los botones
     document.querySelectorAll('button').forEach(btn => btn.disabled = false);
 }
 
@@ -132,9 +203,8 @@ function openTab(tabName) {
 document.getElementById('formServicio').addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    // Prevenir doble submit
     if (isProcessing) {
-        alert('Ya hay una operación en proceso. Por favor espera.');
+        mostrarToast('Operación en proceso', 'Ya hay una operación en curso. Por favor espera.', 'warning');
         return;
     }
     
@@ -160,7 +230,8 @@ document.getElementById('formServicio').addEventListener('submit', async (e) => 
         });
         
         if (response.ok) {
-            alert(`Servicio registrado exitosamente\nCosto final: ${costoFinal.toLocaleString('es-CO')}${propina > 0 ? ` + Propina: ${propina.toLocaleString('es-CO')}` : ''}`);
+            const mensaje = `Costo: ${costoFinal.toLocaleString('es-CO')}${propina > 0 ? ` | Propina: ${propina.toLocaleString('es-CO')}` : ''}`;
+            mostrarToast('Servicio registrado', mensaje, 'success');
             e.target.reset();
             document.getElementById('hayPropina').value = 'no';
             document.getElementById('grupoPropina').style.display = 'none';
@@ -169,11 +240,11 @@ document.getElementById('formServicio').addEventListener('submit', async (e) => 
             await cargarServicios();
         } else {
             const error = await response.text();
-            alert(`Error al registrar servicio: ${error}`);
+            mostrarToast('Error', `No se pudo registrar el servicio: ${error}`, 'error');
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Error de conexión al registrar servicio');
+        mostrarToast('Error de conexión', 'No se pudo conectar con el servidor', 'error');
     } finally {
         desbloquearSistema();
     }
@@ -183,7 +254,7 @@ document.getElementById('formGasto').addEventListener('submit', async (e) => {
     e.preventDefault();
     
     if (isProcessing) {
-        alert('Ya hay una operación en proceso. Por favor espera.');
+        mostrarToast('Operación en proceso', 'Ya hay una operación en curso. Por favor espera.', 'warning');
         return;
     }
     
@@ -201,16 +272,16 @@ document.getElementById('formGasto').addEventListener('submit', async (e) => {
         });
         
         if (response.ok) {
-            alert('Gasto registrado exitosamente');
+            mostrarToast('Gasto registrado', `${data.concepto} - ${data.monto.toLocaleString('es-CO')}`, 'success');
             e.target.reset();
             await cargarGastos();
         } else {
             const error = await response.text();
-            alert(`Error al registrar gasto: ${error}`);
+            mostrarToast('Error', `No se pudo registrar el gasto: ${error}`, 'error');
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Error de conexión al registrar gasto');
+        mostrarToast('Error de conexión', 'No se pudo conectar con el servidor', 'error');
     } finally {
         desbloquearSistema();
     }
@@ -220,7 +291,7 @@ document.getElementById('formPrestamo').addEventListener('submit', async (e) => 
     e.preventDefault();
     
     if (isProcessing) {
-        alert('Ya hay una operación en proceso. Por favor espera.');
+        mostrarToast('Operación en proceso', 'Ya hay una operación en curso. Por favor espera.', 'warning');
         return;
     }
     
@@ -239,16 +310,16 @@ document.getElementById('formPrestamo').addEventListener('submit', async (e) => 
         });
         
         if (response.ok) {
-            alert('Préstamo registrado exitosamente');
+            mostrarToast('Préstamo registrado', `${data.prestatario} - ${data.monto.toLocaleString('es-CO')}`, 'success');
             e.target.reset();
             await cargarPrestamos();
         } else {
             const error = await response.text();
-            alert(`Error al registrar préstamo: ${error}`);
+            mostrarToast('Error', `No se pudo registrar el préstamo: ${error}`, 'error');
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Error de conexión al registrar préstamo');
+        mostrarToast('Error de conexión', 'No se pudo conectar con el servidor', 'error');
     } finally {
         desbloquearSistema();
     }
@@ -278,7 +349,7 @@ async function cargarServicios() {
         `).join('');
     } catch (error) {
         console.error('Error cargando servicios:', error);
-        alert('Error al cargar servicios');
+        mostrarToast('Error', 'No se pudieron cargar los servicios', 'error');
     }
 }
 
@@ -303,7 +374,7 @@ async function cargarGastos() {
         `).join('');
     } catch (error) {
         console.error('Error cargando gastos:', error);
-        alert('Error al cargar gastos');
+        mostrarToast('Error', 'No se pudieron cargar los gastos', 'error');
     }
 }
 
@@ -329,7 +400,7 @@ async function cargarPrestamos() {
         `).join('');
     } catch (error) {
         console.error('Error cargando préstamos:', error);
-        alert('Error al cargar préstamos');
+        mostrarToast('Error', 'No se pudieron cargar los préstamos', 'error');
     }
 }
 
@@ -346,22 +417,22 @@ async function cargarReportes() {
         console.log('Reportes recibidos:', reportes);
 
         document.getElementById('statsGenerales').innerHTML = `
-        <div class="stat-card">
-            <h3>Total Servicios</h3>
-            <div class="value">${reportes.totalServicios || 0}</div>
-        </div>
-        <div class="stat-card">
-            <h3>Ingresos Transferencia</h3>
-            <div class="value">${(reportes.ingresosTransferencia || 0).toLocaleString('es-CO')}</div>
-        </div>
-        <div class="stat-card">
-            <h3>Total Ganancias</h3>
-            <div class="value">${(reportes.ingresosTotales || 0).toLocaleString('es-CO')}</div>
-        </div>
-        <div class="stat-card" style="background: #fee2e2; border: 2px solid #ef4444;">
-            <h3 style="color: #991b1b;">Ganancia Administrador</h3>
-            <div class="value" style="color: #dc2626; font-weight: bold;">${(reportes.gananciaNeta || 0).toLocaleString('es-CO')}</div>
-        </div>
+            <div class="stat-card" style="background: #e0e7ff; border: 2px solid #818cf8;">
+                <h3 style="color: #3730a3;">Total Servicios</h3>
+                <div class="value" style="color: #4f46e5;">${reportes.totalServicios || 0}</div>
+            </div>
+            <div class="stat-card" style="background: #ddd6fe; border: 2px solid #a78bfa;">
+                <h3 style="color: #5b21b6;">Ingresos Transferencia</h3>
+                <div class="value" style="color: #7c3aed;">${(reportes.ingresosTransferencia || 0).toLocaleString('es-CO')}</div>
+            </div>
+            <div class="stat-card" style="background: #ccfbf1; border: 2px solid #5eead4;">
+                <h3 style="color: #115e59;">Total Ganancias</h3>
+                <div class="value" style="color: #0f766e;">${(reportes.ingresosTotales || 0).toLocaleString('es-CO')}</div>
+            </div>
+            <div class="stat-card highlight admin">
+                <h3>Ganancia Administrador</h3>
+                <div class="value ganancia">${(reportes.gananciaNeta || 0).toLocaleString('es-CO')}</div>
+            </div>
         `;
 
         const gananciasEfectivo = reportes.efectivoEnCaja || 0;
@@ -369,19 +440,19 @@ async function cargarReportes() {
         const totalGananciasDisponibles = gananciasEfectivo + gananciasTransferencia;
 
         document.getElementById('statsCaja').innerHTML = `
-            <div class="stat-card" style="background: #d1fae5; border: 2px solid #10b981;">
-                <h3 style="color: #065f46;">Efectivo en Caja</h3>
-                <div class="value" style="color: #047857;">${gananciasEfectivo.toLocaleString('es-CO')}</div>
-                <small style="color: #064e3b;">
-                    Efectivo Total Del Dia: ${(reportes.ingresosEfectivo || 0).toLocaleString('es-CO')}<br>
+            <div class="stat-card caja">
+                <h3>Efectivo en Caja</h3>
+                <div class="value grande">${gananciasEfectivo.toLocaleString('es-CO')}</div>
+                <small>
+                    Efectivo: ${(reportes.ingresosEfectivo || 0).toLocaleString('es-CO')}<br>
                     - Gastos: ${(reportes.gastosTotales || 0).toLocaleString('es-CO')}<br>
                     - Préstamos: ${(reportes.prestamosTotales || 0).toLocaleString('es-CO')}
                 </small>
             </div>
-            <div class="stat-card" style="background: #fef3c7; border: 2px solid #f59e0b;">
-                <h3 style="color: #92400e;">Ganancias del Día</h3>
-                <div class="value" style="color: #b45309;">${totalGananciasDisponibles.toLocaleString('es-CO')}</div>
-                <small style="display: block; margin-top: 15px; line-height: 1.8; color: #78350f;">
+            <div class="stat-card highlight">
+                <h3>Ganancias del Día</h3>
+                <div class="value">${totalGananciasDisponibles.toLocaleString('es-CO')}</div>
+                <small style="display: block; margin-top: 15px; line-height: 1.8;">
                     Efectivo en caja: ${gananciasEfectivo.toLocaleString('es-CO')}<br>
                     Transferencias: ${gananciasTransferencia.toLocaleString('es-CO')}<br>
                 </small>
@@ -461,7 +532,7 @@ async function cargarReportes() {
         
     } catch (error) {
         console.error('Error cargando reportes:', error);
-        alert('Error al cargar reportes: ' + error.message);
+        mostrarToast('Error', 'No se pudieron cargar los reportes: ' + error.message, 'error');
         
         document.getElementById('statsEmpleados').innerHTML = '<p style="text-align: center; color: #c53030;">Error al cargar información de empleados</p>';
     }
@@ -469,11 +540,16 @@ async function cargarReportes() {
 
 async function eliminar(tipo, id) {
     if (isProcessing) {
-        alert('Ya hay una operación en proceso. Por favor espera.');
+        mostrarToast('Operación en proceso', 'Ya hay una operación en curso. Por favor espera.', 'warning');
         return;
     }
     
-    if (!confirm('¿Estás seguro de eliminar este registro?')) return;
+    const confirmado = await mostrarConfirmacion(
+        'Confirmar eliminación',
+        '¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer.'
+    );
+    
+    if (!confirmado) return;
     
     bloquearSistema('Eliminando registro...');
     
@@ -481,17 +557,17 @@ async function eliminar(tipo, id) {
         const response = await apiFetch(`/${tipo}/${id}`, { method: 'DELETE' });
         
         if (response.ok) {
-            alert('Registro eliminado exitosamente');
+            mostrarToast('Registro eliminado', 'El registro se eliminó correctamente', 'success');
             if (tipo === 'servicio') await cargarServicios();
             else if (tipo === 'gasto') await cargarGastos();
             else if (tipo === 'prestamo') await cargarPrestamos();
         } else {
             const error = await response.text();
-            alert(`Error al eliminar registro: ${error}`);
+            mostrarToast('Error', `No se pudo eliminar el registro: ${error}`, 'error');
         }
     } catch (error) {
         console.error('Error eliminando:', error);
-        alert('Error de conexión al eliminar registro');
+        mostrarToast('Error de conexión', 'No se pudo conectar con el servidor', 'error');
     } finally {
         desbloquearSistema();
     }
@@ -499,13 +575,16 @@ async function eliminar(tipo, id) {
 
 async function cerrarDia() {
     if (isProcessing) {
-        alert('Ya hay una operación en proceso. Por favor espera.');
+        mostrarToast('Operación en proceso', 'Ya hay una operación en curso. Por favor espera.', 'warning');
         return;
     }
     
-    if (!confirm('¿Cerrar el día? Esto eliminará TODOS los registros.')) {
-        return;
-    }
+    const confirmado = await mostrarConfirmacion(
+        'Cerrar día',
+        '¿Estás seguro de cerrar el día? Esto eliminará TODOS los registros permanentemente.'
+    );
+    
+    if (!confirmado) return;
     
     bloquearSistema('Cerrando día...');
     
@@ -517,17 +596,17 @@ async function cerrarDia() {
         const result = await response.json();
         
         if (result.success) {
-            alert('Día cerrado exitosamente!\n\n' + (result.mensaje || ''));
+            mostrarToast('Día cerrado exitosamente', result.mensaje || 'Todos los registros han sido eliminados', 'success');
             await cargarServicios();
             await cargarGastos();
             await cargarPrestamos();
             await cargarReportes();
         } else {
-            alert('Error: ' + (result.error || 'Error desconocido'));
+            mostrarToast('Error', result.error || 'Error desconocido', 'error');
         }
     } catch (error) {
         console.error('Error cerrando día:', error);
-        alert('Error de conexión al cerrar día');
+        mostrarToast('Error de conexión', 'No se pudo conectar con el servidor', 'error');
     } finally {
         desbloquearSistema();
     }
@@ -538,4 +617,3 @@ window.addEventListener('DOMContentLoaded', () => {
     cargarGastos();
     cargarPrestamos();
 });
-
