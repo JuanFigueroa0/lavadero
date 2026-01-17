@@ -327,20 +327,17 @@ async function cargarReportes() {
                 <h3 style="color: #065f46;">Efectivo en Caja</h3>
                 <div class="value" style="color: #047857;">${gananciasEfectivo.toLocaleString('es-CO')}</div>
                 <small style="color: #064e3b;">
-                    Efectivo: ${(reportes.ingresosEfectivo || 0).toLocaleString('es-CO')}<br>
+                    Efectivo Total Del Dia: ${(reportes.ingresosEfectivo || 0).toLocaleString('es-CO')}<br>
                     - Gastos: ${(reportes.gastosTotales || 0).toLocaleString('es-CO')}<br>
                     - Préstamos: ${(reportes.prestamosTotales || 0).toLocaleString('es-CO')}
                 </small>
             </div>
             <div class="stat-card" style="background: #fef3c7; border: 2px solid #f59e0b;">
-                <h3 style="color: #92400e;">Composición de Ganancias del Día</h3>
+                <h3 style="color: #92400e;">Ganancias del Día</h3>
                 <div class="value" style="color: #b45309;">${totalGananciasDisponibles.toLocaleString('es-CO')}</div>
                 <small style="display: block; margin-top: 15px; line-height: 1.8; color: #78350f;">
                     Efectivo en caja: ${gananciasEfectivo.toLocaleString('es-CO')}<br>
                     Transferencias: ${gananciasTransferencia.toLocaleString('es-CO')}<br>
-                    <strong style="font-size: 15px; margin-top: 10px; display: block; padding-top: 10px; border-top: 2px solid rgba(0,0,0,0.2); color: #92400e;">
-                        Total disponible: ${totalGananciasDisponibles.toLocaleString('es-CO')}
-                    </strong>
                 </small>
             </div>
             <div class="stat-card" style="background: #e3f2fd; border: 2px solid #2196f3;">
@@ -482,3 +479,4 @@ window.addEventListener('DOMContentLoaded', () => {
     cargarGastos();
     cargarPrestamos();
 });
+
