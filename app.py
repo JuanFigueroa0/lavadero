@@ -253,7 +253,6 @@ def obtener_reportes():
         prestamos_totales = sum(float(p['monto']) for p in prestamos)
         
         salarios = {}
-        dinero_caja_empleados = 0
         
         # EMPLEADOS: David, Luis, Norwin, Sergio
         for empleado in ['David', 'Luis', 'Norwin', 'Sergio']:
@@ -297,7 +296,6 @@ def obtener_reportes():
                 salario_con_propinas += devolucion_normales + devolucion_especiales
             
             salario_con_propinas -= prestamos_emp
-            dinero_caja_empleados += salario_con_propinas
             
             total_servicios_con_propina = servicios_base + propina_total
             
@@ -323,18 +321,26 @@ def obtener_reportes():
             'salarioConPropinas': float(juan_salario_final),
             'prestamos': float(prestamos_juan),
             'num_especiales': 0,
-            'propinaTotal': 0
+            'propinaTotal': 0,
+            'total_servicios': 0
         }
-        dinero_caja_empleados += juan_salario_final
         
-        # LÓGICA: Ganancia Neta
-        total_sueldos_empleados = sum(emp['salarioConPropinas'] for emp in salarios.values())
-        gastos_fijos = 130000
-        ganancia_neta = ingresos_totales - gastos_fijos - total_sueldos_empleados
-        
+        # ORDEN CORRECTO DE CÁLCULO:
+        # 1. Total disponible (después de gastos y préstamos)
         efectivo_en_caja = ingresos_efectivo - gastos_totales - prestamos_totales
+        total_disponible = efectivo_en_caja + ingresos_transferencia
         
-        print(f"DEBUG - Salarios calculados: {salarios}")  # LOG DE DEBUGGING
+        # 2. Restar sueldos de empleados
+        total_sueldos_empleados = sum(emp['salarioConPropinas'] for emp in salarios.values())
+        despues_de_sueldos = total_disponible - total_sueldos_empleados
+        
+        # 3. Restar gasto fijo (arriendo) - ÚLTIMO
+        gastos_fijos = 130000
+        ganancia_administrador = despues_de_sueldos - gastos_fijos
+        
+        print(f"DEBUG - Total disponible: {total_disponible}")
+        print(f"DEBUG - Después de sueldos: {despues_de_sueldos}")
+        print(f"DEBUG - Ganancia administrador (después de arriendo): {ganancia_administrador}")
         
         return jsonify({
             'ingresosEfectivo': float(ingresos_efectivo),
@@ -344,9 +350,9 @@ def obtener_reportes():
             'gastosFijos': gastos_fijos,
             'prestamosTotales': float(prestamos_totales),
             'totalSueldosEmpleados': float(total_sueldos_empleados),
-            'gananciaNeta': float(ganancia_neta),
+            'gananciaNeta': float(ganancia_administrador),  # Ganancia del administrador
             'efectivoEnCaja': float(efectivo_en_caja),
-            'dineroCajaEmpleados': float(dinero_caja_empleados),
+            'totalDisponible': float(total_disponible),
             'totalServicios': total_servicios_realizados,
             'porEmpleado': salarios
         })
@@ -385,6 +391,7 @@ def eliminar(tipo, id):
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
+
 
 
 
