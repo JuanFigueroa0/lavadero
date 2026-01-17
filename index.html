@@ -192,11 +192,36 @@
             <div class="loading-text">Procesando...</div>
         </div>
     </div>
+        <div id="toastContainer" class="toast-container"></div>
+
+<!-- Modal de confirmación -->
+<div id="confirmModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-icon">⚠️</div>
+            <div class="modal-title" id="modalTitle">Confirmar acción</div>
+        </div>
+    <div class="modal-message" id="modalMessage">¿Estás seguro?</div>
+        <div class="modal-buttons">
+            <button class="modal-btn modal-btn-cancel" onclick="cerrarModal()">Cancelar</button>
+            <button class="modal-btn modal-btn-confirm" id="modalConfirmBtn">Confirmar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Overlay de carga -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Procesando...</div>
+    </div>
+</div>
     
     <script src="main.js"></script>
     
 </body>
 </html>
+
 
 
 
