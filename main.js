@@ -13,53 +13,61 @@ async function apiFetch(endpoint, options = {}) {
 
 // Función para convertir fecha a hora local de Colombia
 // Función CORREGIDA - Ajusta la diferencia horaria de Colombia (UTC-5)
+// Función para convertir de UTC (Render) a hora de Colombia (UTC-5)
 function convertirAHoraLocal(fechaString) {
     if (!fechaString || fechaString === 'N/A') return 'N/A';
     
     try {
-        // Si ya viene en formato HH:MM corto, devolverlo
+        // Si ya es formato corto HH:MM
         if (fechaString.length <= 5 && fechaString.includes(':')) {
             return fechaString;
         }
         
-        // Si el formato es 'YYYY-MM-DD HH:MM:SS', extraer y ajustar
+        // Crear Date desde el string del servidor (Render usa UTC)
+        let fecha;
         if (fechaString.includes(' ')) {
-            const partes = fechaString.split(' ');
-            if (partes.length >= 2) {
-                const [fecha, hora] = partes;
-                const [horas, minutos] = hora.split(':').map(Number);
-                
-                // Crear objeto Date en UTC
-                const [año, mes, dia] = fecha.split('-').map(Number);
-                const fechaUTC = new Date(Date.UTC(año, mes - 1, dia, horas, minutos, 0));
-                
-                // Restar 5 horas para Colombia (UTC-5)
-                fechaUTC.setHours(fechaUTC.getHours() - 5);
-                
-                // Formatear como HH:MM
-                const horaLocal = fechaUTC.getUTCHours().toString().padStart(2, '0');
-                const minutoLocal = fechaUTC.getUTCMinutes().toString().padStart(2, '0');
-                
-                return `${horaLocal}:${minutoLocal}`;
+            // Formato: 'YYYY-MM-DD HH:MM:SS' → convertir a ISO
+            const isoString = fechaString.replace(' ', 'T') + 'Z'; // Z indica UTC
+            fecha = new Date(isoString);
+        } else {
+            fecha = new Date(fechaString + 'Z');
+        }
+        
+        // Verificar si la fecha es válida
+        if (isNaN(fecha.getTime())) {
+            console.error('Fecha inválida:', fechaString);
+            // Intento de extracción manual
+            if (fechaString.includes(' ')) {
+                const hora = fechaString.split(' ')[1].substring(0, 5);
+                return hora;
             }
+            return fechaString;
         }
         
-        // Fallback: intentar parsear como Date
-        const fecha = new Date(fechaString);
-        if (!isNaN(fecha.getTime())) {
-            fecha.setHours(fecha.getHours() - 5);
-            const horas = fecha.getHours().toString().padStart(2, '0');
-            const minutos = fecha.getMinutes().toString().padStart(2, '0');
-            return `${horas}:${minutos}`;
-        }
+        // Convertir a hora de Colombia usando toLocaleTimeString
+        const horaLocal = fecha.toLocaleTimeString('es-CO', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+            timeZone: 'America/Bogota'
+        });
         
-        return fechaString;
+        return horaLocal;
         
     } catch (error) {
         console.error('Error al convertir fecha:', fechaString, error);
+        // Fallback: extraer directamente del string y restar 5 horas manualmente
+        if (fechaString.includes(' ')) {
+            const partes = fechaString.split(' ');
+            const [horas, minutos] = partes[1].split(':').map(Number);
+            let horaLocal = horas - 5;
+            if (horaLocal < 0) horaLocal += 24; // Ajustar día anterior
+            return `${horaLocal.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}`;
+        }
         return fechaString;
     }
 }
+
 function actualizarPrecio() {
     const select = document.getElementById('servicio');
     const costoInput = document.getElementById('costo');
@@ -480,6 +488,7 @@ window.addEventListener('DOMContentLoaded', () => {
     cargarGastos();
     cargarPrestamos();
 });
+
 
 
 
