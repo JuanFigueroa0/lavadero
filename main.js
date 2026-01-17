@@ -315,15 +315,30 @@ async function cargarReportes() {
             </div>
         `;
 
-        // Caja
+        // NUEVA SECCIÓN: Composición de Ganancias
+        const gananciasEfectivo = reportes.efectivoEnCaja || 0;
+        const gananciasTransferencia = reportes.ingresosTransferencia || 0;
+        const totalGananciasDisponibles = gananciasEfectivo + gananciasTransferencia;
+
         document.getElementById('statsCaja').innerHTML = `
             <div class="stat-card caja">
                 <h3>Efectivo en Caja</h3>
-                <div class="value grande">$${(reportes.efectivoEnCaja || 0).toLocaleString('es-CO')}</div>
+                <div class="value grande">$${gananciasEfectivo.toLocaleString('es-CO')}</div>
                 <small>
                     Efectivo: $${(reportes.ingresosEfectivo || 0).toLocaleString('es-CO')}<br>
                     - Gastos: $${(reportes.gastosTotales || 0).toLocaleString('es-CO')}<br>
                     - Préstamos: $${(reportes.prestamosTotales || 0).toLocaleString('es-CO')}
+                </small>
+            </div>
+            <div class="stat-card highlight">
+                <h3>Composición de Ganancias del Día</h3>
+                <div class="value">$${totalGananciasDisponibles.toLocaleString('es-CO')}</div>
+                <small style="display: block; margin-top: 15px; line-height: 1.8;">
+                    Efectivo en caja: $${gananciasEfectivo.toLocaleString('es-CO')}<br>
+                    Transferencias: $${gananciasTransferencia.toLocaleString('es-CO')}<br>
+                    <strong style="font-size: 15px; margin-top: 10px; display: block; padding-top: 10px; border-top: 2px solid rgba(0,0,0,0.1);">
+                        Total disponible: $${totalGananciasDisponibles.toLocaleString('es-CO')}
+                    </strong>
                 </small>
             </div>
         `;
@@ -352,37 +367,43 @@ async function cargarReportes() {
                 
                 // JUAN - Versión simplificada
                 if (empleado === 'Juan') {
-                    empleadosHTML += `
-                        <div class="stat-card empleado">
-                            <h3>${empleado}</h3>
-                            <div class="value-sueldo">
-                                <span class="salario-final">$${salarioFinal.toLocaleString('es-CO')}</span>
+                    // SOLO MOSTRAR SI TIENE SERVICIOS
+                    if (datos.num_servicios > 0) {
+                        empleadosHTML += `
+                            <div class="stat-card empleado">
+                                <h3>${empleado}</h3>
+                                <div class="value-sueldo">
+                                    <span class="salario-final">$${salarioFinal.toLocaleString('es-CO')}</span>
+                                </div>
+                                <div class="detalles">
+                                    <div><strong>Total generado:</strong> $${totalGenerado.toLocaleString('es-CO')}</div>
+                                    <div><strong>Servicios totales:</strong> ${datos.num_servicios || 0}</div>
+                                    ${(datos.prestamos || 0) > 0 ? `<div class="prestamo"><strong>Préstamo:</strong> -$${(datos.prestamos || 0).toLocaleString('es-CO')}</div>` : ''}
+                                </div>
                             </div>
-                            <div class="detalles">
-                                <div><strong>Servicios totales:</strong> ${datos.num_servicios || 0}</div>
-                                ${(datos.prestamos || 0) > 0 ? `<div class="prestamo"><strong>Préstamo:</strong> -$${(datos.prestamos || 0).toLocaleString('es-CO')}</div>` : ''}
-                            </div>
-                        </div>
-                    `;
+                        `;
+                    }
                 } else {
-                    // OTROS EMPLEADOS - Versión completa con Total Generado
-                    empleadosHTML += `
-                        <div class="stat-card empleado">
-                            <h3>${empleado}</h3>
-                            <div class="value-sueldo">
-                                <span class="salario-base">$${salarioBase.toLocaleString('es-CO')}</span>
-                                <span class="flecha">➜</span>
-                                <span class="salario-final">$${salarioFinal.toLocaleString('es-CO')}</span>
+                    // OTROS EMPLEADOS - SOLO MOSTRAR SI TIENEN SERVICIOS
+                    if (datos.num_servicios > 0) {
+                        empleadosHTML += `
+                            <div class="stat-card empleado">
+                                <h3>${empleado}</h3>
+                                <div class="value-sueldo">
+                                    <span class="salario-base">$${salarioBase.toLocaleString('es-CO')}</span>
+                                    <span class="flecha">➜</span>
+                                    <span class="salario-final">$${salarioFinal.toLocaleString('es-CO')}</span>
+                                </div>
+                                <div class="detalles">
+                                    <div><strong>Total generado:</strong> $${totalGenerado.toLocaleString('es-CO')}</div>
+                                    <div><strong>Servicios:</strong> ${datos.num_servicios || 0} (${numSencillos} simples, ${datos.num_especiales || 0} especiales)</div>
+                                    <div class="propina"><strong>Propinas:</strong> +$${parseFloat(datos.propinaTotal || 0).toLocaleString('es-CO')}</div>
+                                    <div class="aumento"><strong>Aumento:</strong> +$${aumento.toLocaleString('es-CO')}</div>
+                                    ${(datos.prestamos || 0) > 0 ? `<div class="prestamo"><strong>Préstamo:</strong> -$${(datos.prestamos || 0).toLocaleString('es-CO')}</div>` : ''}
+                                </div>
                             </div>
-                            <div class="detalles">
-                                <div><strong>Total generado:</strong> $${totalGenerado.toLocaleString('es-CO')}</div>
-                                <div><strong>Servicios:</strong> ${datos.num_servicios || 0} (${numSencillos} simples, ${datos.num_especiales || 0} especiales)</div>
-                                <div class="propina"><strong>Propinas:</strong> +$${parseFloat(datos.propinaTotal || 0).toLocaleString('es-CO')}</div>
-                                <div class="aumento"><strong>Aumento:</strong> +$${aumento.toLocaleString('es-CO')}</div>
-                                ${(datos.prestamos || 0) > 0 ? `<div class="prestamo"><strong>Préstamo:</strong> -$${(datos.prestamos || 0).toLocaleString('es-CO')}</div>` : ''}
-                            </div>
-                        </div>
-                    `;
+                        `;
+                    }
                 }
             });
             
@@ -396,7 +417,6 @@ async function cargarReportes() {
         console.error('Error cargando reportes:', error);
         alert('Error al cargar reportes: ' + error.message);
         
-        // Mostrar mensaje de error en lugar de dejar vacío
         document.getElementById('statsEmpleados').innerHTML = '<p style="text-align: center; color: #c53030;">Error al cargar información de empleados</p>';
     }
 }
@@ -454,5 +474,6 @@ window.addEventListener('DOMContentLoaded', () => {
     cargarGastos();
     cargarPrestamos();
 });
+
 
 
