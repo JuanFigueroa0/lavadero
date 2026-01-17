@@ -440,30 +440,30 @@ async function cargarReportes() {
         const totalGananciasDisponibles = gananciasEfectivo + gananciasTransferencia;
 
         document.getElementById('statsCaja').innerHTML = `
-            <div class="stat-card caja">
-                <h3>Efectivo en Caja</h3>
-                <div class="value grande">${gananciasEfectivo.toLocaleString('es-CO')}</div>
-                <small>
-                    Efectivo: ${(reportes.ingresosEfectivo || 0).toLocaleString('es-CO')}<br>
-                    - Gastos: ${(reportes.gastosTotales || 0).toLocaleString('es-CO')}<br>
-                    - Préstamos: ${(reportes.prestamosTotales || 0).toLocaleString('es-CO')}
-                </small>
-            </div>
-            <div class="stat-card highlight">
-                <h3>Ganancias del Día</h3>
-                <div class="value">${totalGananciasDisponibles.toLocaleString('es-CO')}</div>
-                <small style="display: block; margin-top: 15px; line-height: 1.8;">
-                    Efectivo en caja: ${gananciasEfectivo.toLocaleString('es-CO')}<br>
-                    Transferencias: ${gananciasTransferencia.toLocaleString('es-CO')}<br>
-                </small>
-            </div>
-            <div class="stat-card" style="background: #e3f2fd; border: 2px solid #2196f3;">
-                <h3 style="color: #0d47a1;">Total Salarios Empleados</h3>
-                <div class="value" style="color: #1565c0;">${(reportes.totalSueldosEmpleados || 0).toLocaleString('es-CO')}</div>
-                <small style="display: block; margin-top: 10px; color: #1565c0;">
-                    Suma de los 5 empleados
-                </small>
-            </div>
+        <div class="stat-card" style="background: #d1fae5; border: 2px solid #10b981;">
+            <h3 style="color: #065f46;">Efectivo en Caja</h3>
+            <div class="value" style="color: #047857;">${gananciasEfectivo.toLocaleString('es-CO')}</div>
+            <small style="color: #064e3b;">
+            Efectivo: ${(reportes.ingresosEfectivo || 0).toLocaleString('es-CO')}<br>
+            - Gastos: ${(reportes.gastosTotales || 0).toLocaleString('es-CO')}<br>
+            - Préstamos: ${(reportes.prestamosTotales || 0).toLocaleString('es-CO')}
+            </small>
+        </div>
+        <div class="stat-card" style="background: #fef3c7; border: 2px solid #f59e0b;">
+            <h3 style="color: #92400e;">Ganancias del Día</h3>
+            <div class="value" style="color: #b45309;">${totalGananciasDisponibles.toLocaleString('es-CO')}</div>
+            <small style="display: block; margin-top: 15px; line-height: 1.8; color: #78350f;">
+                Efectivo en caja: ${gananciasEfectivo.toLocaleString('es-CO')}<br>
+                Transferencias: ${gananciasTransferencia.toLocaleString('es-CO')}<br>
+            </small>
+        </div>
+        <div class="stat-card" style="background: #e3f2fd; border: 2px solid #2196f3;">
+            <h3 style="color: #0d47a1;">Total Salarios Empleados</h3>
+            <div class="value" style="color: #1565c0;">${(reportes.totalSueldosEmpleados || 0).toLocaleString('es-CO')}</div>
+            <small style="display: block; margin-top: 10px; color: #1565c0;">
+                Suma de los 5 empleados
+            </small>
+        </div>
         `;
 
         const ordenEmpleados = ['David', 'Luis', 'Norwin', 'Sergio', 'Juan'];
@@ -515,7 +515,7 @@ async function cargarReportes() {
                                     <div><strong>Total generado:</strong> ${totalGenerado.toLocaleString('es-CO')}</div>
                                     <div><strong>Servicios:</strong> ${datos.num_servicios || 0} (${numSencillos} simples, ${datos.num_especiales || 0} especiales)</div>
                                     <div class="propina"><strong>Propinas:</strong> +${parseFloat(datos.propinaTotal || 0).toLocaleString('es-CO')}</div>
-                                    <div class="aumento"><strong>Aumento:</strong> +${aumento.toLocaleString('es-CO')}</div>
+                                    <div class="aumento"><strong>Aumento:</strong> ${aumento.toLocaleString('es-CO')}</div>
                                     ${(datos.prestamos || 0) > 0 ? `<div class="prestamo"><strong>Préstamo:</strong> -${(datos.prestamos || 0).toLocaleString('es-CO')}</div>` : ''}
                                 </div>
                             </div>
@@ -617,4 +617,5 @@ window.addEventListener('DOMContentLoaded', () => {
     cargarGastos();
     cargarPrestamos();
 });
+
 
