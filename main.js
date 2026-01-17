@@ -291,7 +291,7 @@ async function cargarReportes() {
         
         console.log('Reportes recibidos:', reportes);
 
-        // STATS GENERALES - Total Ganancias en lugar de Gastos Fijos
+        // STATS GENERALES
         document.getElementById('statsGenerales').innerHTML = `
             <div class="stat-card">
                 <h3>Total Servicios</h3>
@@ -310,12 +310,12 @@ async function cargarReportes() {
                 <div class="value">$${(reportes.ingresosTotales || 0).toLocaleString('es-CO')}</div>
             </div>
             <div class="stat-card highlight">
-                <h3>Ganancia Neta Final</h3>
+                <h3>Ganancia Administrador</h3>
                 <div class="value ganancia">$${(reportes.gananciaNeta || 0).toLocaleString('es-CO')}</div>
             </div>
         `;
 
-        // NUEVA SECCIÓN: Composición de Ganancias
+        // CAJA Y COMPOSICIÓN DE GANANCIAS
         const gananciasEfectivo = reportes.efectivoEnCaja || 0;
         const gananciasTransferencia = reportes.ingresosTransferencia || 0;
         const totalGananciasDisponibles = gananciasEfectivo + gananciasTransferencia;
@@ -339,6 +339,13 @@ async function cargarReportes() {
                     <strong style="font-size: 15px; margin-top: 10px; display: block; padding-top: 10px; border-top: 2px solid rgba(0,0,0,0.1);">
                         Total disponible: $${totalGananciasDisponibles.toLocaleString('es-CO')}
                     </strong>
+                </small>
+            </div>
+            <div class="stat-card" style="background: #e3f2fd; border: 2px solid #2196f3;">
+                <h3>Total Salarios Empleados</h3>
+                <div class="value" style="color: #1565c0;">$${(reportes.totalSueldosEmpleados || 0).toLocaleString('es-CO')}</div>
+                <small style="display: block; margin-top: 10px; color: #424242;">
+                    Suma de los 5 empleados
                 </small>
             </div>
         `;
@@ -376,7 +383,6 @@ async function cargarReportes() {
                                     <span class="salario-final">$${salarioFinal.toLocaleString('es-CO')}</span>
                                 </div>
                                 <div class="detalles">
-                                    <div><strong>Total generado:</strong> $${totalGenerado.toLocaleString('es-CO')}</div>
                                     <div><strong>Servicios totales:</strong> ${datos.num_servicios || 0}</div>
                                     ${(datos.prestamos || 0) > 0 ? `<div class="prestamo"><strong>Préstamo:</strong> -$${(datos.prestamos || 0).toLocaleString('es-CO')}</div>` : ''}
                                 </div>
@@ -474,6 +480,7 @@ window.addEventListener('DOMContentLoaded', () => {
     cargarGastos();
     cargarPrestamos();
 });
+
 
 
 
