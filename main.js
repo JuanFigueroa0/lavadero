@@ -1,5 +1,29 @@
 const API_BASE_URL = 'https://lavadero-ubdd.onrender.com/api';
 
+// Variable para controlar el bloqueo
+let isProcessing = false;
+
+// Funciones de bloqueo
+function bloquearSistema(mensaje = 'Procesando...') {
+    isProcessing = true;
+    const overlay = document.getElementById('loadingOverlay');
+    const loadingText = overlay.querySelector('.loading-text');
+    loadingText.textContent = mensaje;
+    overlay.classList.add('active');
+    
+    // Deshabilitar todos los botones
+    document.querySelectorAll('button').forEach(btn => btn.disabled = true);
+}
+
+function desbloquearSistema() {
+    isProcessing = false;
+    const overlay = document.getElementById('loadingOverlay');
+    overlay.classList.remove('active');
+    
+    // Rehabilitar todos los botones
+    document.querySelectorAll('button').forEach(btn => btn.disabled = false);
+}
+
 async function apiFetch(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
     return fetch(url, {
@@ -16,25 +40,20 @@ function convertirAHoraLocal(fechaString) {
     if (!fechaString || fechaString === 'N/A') return 'N/A';
     
     try {
-        // Si ya es formato corto HH:MM
         if (fechaString.length <= 5 && fechaString.includes(':')) {
             return fechaString;
         }
         
-        // Crear Date desde el string del servidor (Render usa UTC)
         let fecha;
         if (fechaString.includes(' ')) {
-            // Formato: 'YYYY-MM-DD HH:MM:SS' → convertir a ISO
-            const isoString = fechaString.replace(' ', 'T') + 'Z'; // Z indica UTC
+            const isoString = fechaString.replace(' ', 'T') + 'Z';
             fecha = new Date(isoString);
         } else {
             fecha = new Date(fechaString + 'Z');
         }
         
-        // Verificar si la fecha es válida
         if (isNaN(fecha.getTime())) {
             console.error('Fecha inválida:', fechaString);
-            // Intento de extracción manual
             if (fechaString.includes(' ')) {
                 const hora = fechaString.split(' ')[1].substring(0, 5);
                 return hora;
@@ -42,7 +61,6 @@ function convertirAHoraLocal(fechaString) {
             return fechaString;
         }
         
-        // Convertir a hora de Colombia usando toLocaleTimeString
         const horaLocal = fecha.toLocaleTimeString('es-CO', {
             hour: '2-digit',
             minute: '2-digit',
@@ -54,12 +72,11 @@ function convertirAHoraLocal(fechaString) {
         
     } catch (error) {
         console.error('Error al convertir fecha:', fechaString, error);
-        // Fallback: extraer directamente del string y restar 5 horas manualmente
         if (fechaString.includes(' ')) {
             const partes = fechaString.split(' ');
             const [horas, minutos] = partes[1].split(':').map(Number);
             let horaLocal = horas - 5;
-            if (horaLocal < 0) horaLocal += 24; // Ajustar día anterior
+            if (horaLocal < 0) horaLocal += 24;
             return `${horaLocal.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}`;
         }
         return fechaString;
@@ -114,6 +131,13 @@ function openTab(tabName) {
 
 document.getElementById('formServicio').addEventListener('submit', async (e) => {
     e.preventDefault();
+    
+    // Prevenir doble submit
+    if (isProcessing) {
+        alert('Ya hay una operación en proceso. Por favor espera.');
+        return;
+    }
+    
     const hayPropina = document.getElementById('hayPropina').value === 'si';
     const propina = hayPropina ? parseFloat(document.getElementById('valorPropina').value || 0) : 0;
     const costoInput = document.getElementById('costo');
@@ -126,6 +150,8 @@ document.getElementById('formServicio').addEventListener('submit', async (e) => 
         metodoPago: document.getElementById('metodoPago').value,
         propina: propina
     };
+    
+    bloquearSistema('Registrando servicio...');
     
     try {
         const response = await apiFetch('/servicio', {
@@ -140,7 +166,7 @@ document.getElementById('formServicio').addEventListener('submit', async (e) => 
             document.getElementById('grupoPropina').style.display = 'none';
             costoInput.value = '';
             costoInput.style.background = '#f0f0f0';
-            cargarServicios();
+            await cargarServicios();
         } else {
             const error = await response.text();
             alert(`Error al registrar servicio: ${error}`);
@@ -148,15 +174,25 @@ document.getElementById('formServicio').addEventListener('submit', async (e) => 
     } catch (error) {
         console.error('Error:', error);
         alert('Error de conexión al registrar servicio');
+    } finally {
+        desbloquearSistema();
     }
 });
 
 document.getElementById('formGasto').addEventListener('submit', async (e) => {
     e.preventDefault();
+    
+    if (isProcessing) {
+        alert('Ya hay una operación en proceso. Por favor espera.');
+        return;
+    }
+    
     const data = {
         concepto: document.getElementById('conceptoGasto').value,
         monto: parseFloat(document.getElementById('montoGasto').value)
     };
+    
+    bloquearSistema('Registrando gasto...');
     
     try {
         const response = await apiFetch('/gasto', {
@@ -167,7 +203,7 @@ document.getElementById('formGasto').addEventListener('submit', async (e) => {
         if (response.ok) {
             alert('Gasto registrado exitosamente');
             e.target.reset();
-            cargarGastos();
+            await cargarGastos();
         } else {
             const error = await response.text();
             alert(`Error al registrar gasto: ${error}`);
@@ -175,16 +211,26 @@ document.getElementById('formGasto').addEventListener('submit', async (e) => {
     } catch (error) {
         console.error('Error:', error);
         alert('Error de conexión al registrar gasto');
+    } finally {
+        desbloquearSistema();
     }
 });
 
 document.getElementById('formPrestamo').addEventListener('submit', async (e) => {
     e.preventDefault();
+    
+    if (isProcessing) {
+        alert('Ya hay una operación en proceso. Por favor espera.');
+        return;
+    }
+    
     const data = {
         prestatario: document.getElementById('prestatario').value,
         concepto: document.getElementById('conceptoPrestamo').value,
         monto: parseFloat(document.getElementById('montoPrestamo').value)
     };
+    
+    bloquearSistema('Registrando préstamo...');
     
     try {
         const response = await apiFetch('/prestamo', {
@@ -195,7 +241,7 @@ document.getElementById('formPrestamo').addEventListener('submit', async (e) => 
         if (response.ok) {
             alert('Préstamo registrado exitosamente');
             e.target.reset();
-            cargarPrestamos();
+            await cargarPrestamos();
         } else {
             const error = await response.text();
             alert(`Error al registrar préstamo: ${error}`);
@@ -203,6 +249,8 @@ document.getElementById('formPrestamo').addEventListener('submit', async (e) => 
     } catch (error) {
         console.error('Error:', error);
         alert('Error de conexión al registrar préstamo');
+    } finally {
+        desbloquearSistema();
     }
 });
 
@@ -297,27 +345,25 @@ async function cargarReportes() {
         
         console.log('Reportes recibidos:', reportes);
 
-        // STATS GENERALES - CON COLORES
         document.getElementById('statsGenerales').innerHTML = `
-        <div class="stat-card" style="background: #e0e7ff; border: 2px solid #818cf8;">
-            <h3 style="color: #3730a3;">Total Servicios</h3>
-            <div class="value" style="color: #4f46e5;">${reportes.totalServicios || 0}</div>
-        </div>
-        <div class="stat-card" style="background: #ddd6fe; border: 2px solid #a78bfa;">
-            <h3 style="color: #5b21b6;">Ingresos Transferencia</h3>
-            <div class="value" style="color: #7c3aed;">${(reportes.ingresosTransferencia || 0).toLocaleString('es-CO')}</div>
-        </div>
-        <div class="stat-card" style="background: #ccfbf1; border: 2px solid #5eead4;">
-            <h3 style="color: #115e59;">Total Ganancias</h3>
-            <div class="value" style="color: #0f766e;">${(reportes.ingresosTotales || 0).toLocaleString('es-CO')}</div>
-        </div>
-        <div class="stat-card" style="background: #fee2e2; border: 2px solid #ef4444;">
-            <h3 style="color: #991b1b;">Ganancia Administrador</h3>
-            <div class="value" style="color: #dc2626; font-weight: bold;">${(reportes.gananciaNeta || 0).toLocaleString('es-CO')}</div>
-        </div>
+            <div class="stat-card" style="background: #e0e7ff; border: 2px solid #818cf8;">
+                <h3 style="color: #3730a3;">Total Servicios</h3>
+                <div class="value" style="color: #4f46e5;">${reportes.totalServicios || 0}</div>
+            </div>
+            <div class="stat-card" style="background: #ddd6fe; border: 2px solid #a78bfa;">
+                <h3 style="color: #5b21b6;">Ingresos Transferencia</h3>
+                <div class="value" style="color: #7c3aed;">${(reportes.ingresosTransferencia || 0).toLocaleString('es-CO')}</div>
+            </div>
+            <div class="stat-card" style="background: #ccfbf1; border: 2px solid #5eead4;">
+                <h3 style="color: #115e59;">Total Ganancias</h3>
+                <div class="value" style="color: #0f766e;">${(reportes.ingresosTotales || 0).toLocaleString('es-CO')}</div>
+            </div>
+            <div class="stat-card" style="background: #fee2e2; border: 2px solid #ef4444;">
+                <h3 style="color: #991b1b;">Ganancia Administrador</h3>
+                <div class="value" style="color: #dc2626; font-weight: bold;">${(reportes.gananciaNeta || 0).toLocaleString('es-CO')}</div>
+            </div>
         `;
 
-        // CAJA Y COMPOSICIÓN DE GANANCIAS - CON COLORES DE FONDO
         const gananciasEfectivo = reportes.efectivoEnCaja || 0;
         const gananciasTransferencia = reportes.ingresosTransferencia || 0;
         const totalGananciasDisponibles = gananciasEfectivo + gananciasTransferencia;
@@ -349,7 +395,6 @@ async function cargarReportes() {
             </div>
         `;
 
-        // Orden personalizado: David, Luis, Norwin, Sergio, Juan al final
         const ordenEmpleados = ['David', 'Luis', 'Norwin', 'Sergio', 'Juan'];
         
         let empleadosHTML = '';
@@ -357,7 +402,6 @@ async function cargarReportes() {
         if (reportes.porEmpleado && Object.keys(reportes.porEmpleado).length > 0) {
             console.log('Datos por empleado:', reportes.porEmpleado);
             
-            // Ordenar empleados según el array ordenEmpleados
             const empleadosOrdenados = Object.entries(reportes.porEmpleado).sort((a, b) => {
                 const indexA = ordenEmpleados.indexOf(a[0]);
                 const indexB = ordenEmpleados.indexOf(b[0]);
@@ -371,9 +415,7 @@ async function cargarReportes() {
                 const aumento = salarioFinal - salarioBase;
                 const numSencillos = (datos.num_servicios || 0) - (datos.num_especiales || 0);
                 
-                // JUAN - Versión simplificada
                 if (empleado === 'Juan') {
-                    // SOLO MOSTRAR SI TIENE SERVICIOS
                     if (datos.num_servicios > 0) {
                         empleadosHTML += `
                             <div class="stat-card empleado">
@@ -389,7 +431,6 @@ async function cargarReportes() {
                         `;
                     }
                 } else {
-                    // OTROS EMPLEADOS - SOLO MOSTRAR SI TIENEN SERVICIOS
                     if (datos.num_servicios > 0) {
                         empleadosHTML += `
                             <div class="stat-card empleado">
@@ -427,16 +468,23 @@ async function cargarReportes() {
 }
 
 async function eliminar(tipo, id) {
+    if (isProcessing) {
+        alert('Ya hay una operación en proceso. Por favor espera.');
+        return;
+    }
+    
     if (!confirm('¿Estás seguro de eliminar este registro?')) return;
+    
+    bloquearSistema('Eliminando registro...');
     
     try {
         const response = await apiFetch(`/${tipo}/${id}`, { method: 'DELETE' });
         
         if (response.ok) {
             alert('Registro eliminado exitosamente');
-            if (tipo === 'servicio') cargarServicios();
-            else if (tipo === 'gasto') cargarGastos();
-            else if (tipo === 'prestamo') cargarPrestamos();
+            if (tipo === 'servicio') await cargarServicios();
+            else if (tipo === 'gasto') await cargarGastos();
+            else if (tipo === 'prestamo') await cargarPrestamos();
         } else {
             const error = await response.text();
             alert(`Error al eliminar registro: ${error}`);
@@ -444,13 +492,22 @@ async function eliminar(tipo, id) {
     } catch (error) {
         console.error('Error eliminando:', error);
         alert('Error de conexión al eliminar registro');
+    } finally {
+        desbloquearSistema();
     }
 }
 
 async function cerrarDia() {
+    if (isProcessing) {
+        alert('Ya hay una operación en proceso. Por favor espera.');
+        return;
+    }
+    
     if (!confirm('¿Cerrar el día? Esto eliminará TODOS los registros.')) {
         return;
     }
+    
+    bloquearSistema('Cerrando día...');
     
     try {
         const response = await apiFetch('/cerrar-dia', {
@@ -461,16 +518,18 @@ async function cerrarDia() {
         
         if (result.success) {
             alert('Día cerrado exitosamente!\n\n' + (result.mensaje || ''));
-            cargarServicios();
-            cargarGastos();
-            cargarPrestamos();
-            cargarReportes();
+            await cargarServicios();
+            await cargarGastos();
+            await cargarPrestamos();
+            await cargarReportes();
         } else {
             alert('Error: ' + (result.error || 'Error desconocido'));
         }
     } catch (error) {
         console.error('Error cerrando día:', error);
         alert('Error de conexión al cerrar día');
+    } finally {
+        desbloquearSistema();
     }
 }
 
@@ -479,5 +538,3 @@ window.addEventListener('DOMContentLoaded', () => {
     cargarGastos();
     cargarPrestamos();
 });
-
-
