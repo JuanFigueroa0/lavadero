@@ -11,8 +11,6 @@ async function apiFetch(endpoint, options = {}) {
     });
 }
 
-// Función para convertir fecha a hora local de Colombia
-// Función CORREGIDA - Ajusta la diferencia horaria de Colombia (UTC-5)
 // Función para convertir de UTC (Render) a hora de Colombia (UTC-5)
 function convertirAHoraLocal(fechaString) {
     if (!fechaString || fechaString === 'N/A') return 'N/A';
@@ -136,7 +134,7 @@ document.getElementById('formServicio').addEventListener('submit', async (e) => 
         });
         
         if (response.ok) {
-            alert(`Servicio registrado exitosamente\nCosto final: $${costoFinal.toLocaleString('es-CO')}${propina > 0 ? ` + Propina: $${propina.toLocaleString('es-CO')}` : ''}`);
+            alert(`Servicio registrado exitosamente\nCosto final: ${costoFinal.toLocaleString('es-CO')}${propina > 0 ? ` + Propina: ${propina.toLocaleString('es-CO')}` : ''}`);
             e.target.reset();
             document.getElementById('hayPropina').value = 'no';
             document.getElementById('grupoPropina').style.display = 'none';
@@ -277,7 +275,7 @@ async function cargarPrestamos() {
                 <td>${convertirAHoraLocal(p.fecha)}</td>
                 <td>${p.prestatario}</td>
                 <td>${p.concepto}</td>
-                <td>$${parseFloat(p.monto || 0).toLocaleString('es-CO')}</td>
+                <td>${parseFloat(p.monto || 0).toLocaleString('es-CO')}</td>
                 <td><button class="delete-btn" onclick="eliminar('prestamo', ${p.id})">Eliminar</button></td>
             </tr>
         `).join('');
@@ -299,7 +297,7 @@ async function cargarReportes() {
         
         console.log('Reportes recibidos:', reportes);
 
-        // STATS GENERALES - SIN Ingresos Efectivo
+        // STATS GENERALES - CON COLORES
         document.getElementById('statsGenerales').innerHTML = `
             <div class="stat-card">
                 <h3>Total Servicios</h3>
@@ -307,48 +305,48 @@ async function cargarReportes() {
             </div>
             <div class="stat-card">
                 <h3>Ingresos Transferencia</h3>
-                <div class="value">$${(reportes.ingresosTransferencia || 0).toLocaleString('es-CO')}</div>
+                <div class="value">${(reportes.ingresosTransferencia || 0).toLocaleString('es-CO')}</div>
             </div>
             <div class="stat-card">
                 <h3>Total Ganancias</h3>
-                <div class="value">$${(reportes.ingresosTotales || 0).toLocaleString('es-CO')}</div>
+                <div class="value">${(reportes.ingresosTotales || 0).toLocaleString('es-CO')}</div>
             </div>
-            <div class="stat-card highlight admin">
-                <h3>Ganancia Administrador</h3>
-                <div class="value ganancia">$${(reportes.gananciaNeta || 0).toLocaleString('es-CO')}</div>
+            <div class="stat-card" style="background: #fee2e2; border: 2px solid #ef4444;">
+                <h3 style="color: #991b1b;">Ganancia Administrador</h3>
+                <div class="value" style="color: #dc2626; font-weight: bold;">${(reportes.gananciaNeta || 0).toLocaleString('es-CO')}</div>
             </div>
         `;
 
-        // CAJA Y COMPOSICIÓN DE GANANCIAS
+        // CAJA Y COMPOSICIÓN DE GANANCIAS - CON COLORES DE FONDO
         const gananciasEfectivo = reportes.efectivoEnCaja || 0;
         const gananciasTransferencia = reportes.ingresosTransferencia || 0;
         const totalGananciasDisponibles = gananciasEfectivo + gananciasTransferencia;
 
         document.getElementById('statsCaja').innerHTML = `
-            <div class="stat-card caja">
-                <h3>Efectivo en Caja</h3>
-                <div class="value grande">$${gananciasEfectivo.toLocaleString('es-CO')}</div>
-                <small>
-                    Efectivo: $${(reportes.ingresosEfectivo || 0).toLocaleString('es-CO')}<br>
-                    - Gastos: $${(reportes.gastosTotales || 0).toLocaleString('es-CO')}<br>
-                    - Préstamos: $${(reportes.prestamosTotales || 0).toLocaleString('es-CO')}
+            <div class="stat-card" style="background: #d1fae5; border: 2px solid #10b981;">
+                <h3 style="color: #065f46;">Efectivo en Caja</h3>
+                <div class="value" style="color: #047857;">${gananciasEfectivo.toLocaleString('es-CO')}</div>
+                <small style="color: #064e3b;">
+                    Efectivo: ${(reportes.ingresosEfectivo || 0).toLocaleString('es-CO')}<br>
+                    - Gastos: ${(reportes.gastosTotales || 0).toLocaleString('es-CO')}<br>
+                    - Préstamos: ${(reportes.prestamosTotales || 0).toLocaleString('es-CO')}
                 </small>
             </div>
-            <div class="stat-card highlight">
-                <h3>Composición de Ganancias del Día</h3>
-                <div class="value">$${totalGananciasDisponibles.toLocaleString('es-CO')}</div>
-                <small style="display: block; margin-top: 15px; line-height: 1.8;">
-                    Efectivo en caja: $${gananciasEfectivo.toLocaleString('es-CO')}<br>
-                    Transferencias: $${gananciasTransferencia.toLocaleString('es-CO')}<br>
-                    <strong style="font-size: 15px; margin-top: 10px; display: block; padding-top: 10px; border-top: 2px solid rgba(0,0,0,0.1);">
-                        Total disponible: $${totalGananciasDisponibles.toLocaleString('es-CO')}
+            <div class="stat-card" style="background: #fef3c7; border: 2px solid #f59e0b;">
+                <h3 style="color: #92400e;">Composición de Ganancias del Día</h3>
+                <div class="value" style="color: #b45309;">${totalGananciasDisponibles.toLocaleString('es-CO')}</div>
+                <small style="display: block; margin-top: 15px; line-height: 1.8; color: #78350f;">
+                    Efectivo en caja: ${gananciasEfectivo.toLocaleString('es-CO')}<br>
+                    Transferencias: ${gananciasTransferencia.toLocaleString('es-CO')}<br>
+                    <strong style="font-size: 15px; margin-top: 10px; display: block; padding-top: 10px; border-top: 2px solid rgba(0,0,0,0.2); color: #92400e;">
+                        Total disponible: ${totalGananciasDisponibles.toLocaleString('es-CO')}
                     </strong>
                 </small>
             </div>
             <div class="stat-card" style="background: #e3f2fd; border: 2px solid #2196f3;">
-                <h3>Total Salarios Empleados</h3>
-                <div class="value" style="color: #1565c0;">$${(reportes.totalSueldosEmpleados || 0).toLocaleString('es-CO')}</div>
-                <small style="display: block; margin-top: 10px; color: #424242;">
+                <h3 style="color: #0d47a1;">Total Salarios Empleados</h3>
+                <div class="value" style="color: #1565c0;">${(reportes.totalSueldosEmpleados || 0).toLocaleString('es-CO')}</div>
+                <small style="display: block; margin-top: 10px; color: #1565c0;">
                     Suma de los 5 empleados
                 </small>
             </div>
@@ -384,11 +382,11 @@ async function cargarReportes() {
                             <div class="stat-card empleado">
                                 <h3>${empleado}</h3>
                                 <div class="value-sueldo">
-                                    <span class="salario-final">$${salarioFinal.toLocaleString('es-CO')}</span>
+                                    <span class="salario-final">${salarioFinal.toLocaleString('es-CO')}</span>
                                 </div>
                                 <div class="detalles">
                                     <div><strong>Servicios totales:</strong> ${datos.num_servicios || 0}</div>
-                                    ${(datos.prestamos || 0) > 0 ? `<div class="prestamo"><strong>Préstamo:</strong> -$${(datos.prestamos || 0).toLocaleString('es-CO')}</div>` : ''}
+                                    ${(datos.prestamos || 0) > 0 ? `<div class="prestamo"><strong>Préstamo:</strong> -${(datos.prestamos || 0).toLocaleString('es-CO')}</div>` : ''}
                                 </div>
                             </div>
                         `;
@@ -400,16 +398,16 @@ async function cargarReportes() {
                             <div class="stat-card empleado">
                                 <h3>${empleado}</h3>
                                 <div class="value-sueldo">
-                                    <span class="salario-base">$${salarioBase.toLocaleString('es-CO')}</span>
+                                    <span class="salario-base">${salarioBase.toLocaleString('es-CO')}</span>
                                     <span class="flecha">➜</span>
-                                    <span class="salario-final">$${salarioFinal.toLocaleString('es-CO')}</span>
+                                    <span class="salario-final">${salarioFinal.toLocaleString('es-CO')}</span>
                                 </div>
                                 <div class="detalles">
-                                    <div><strong>Total generado:</strong> $${totalGenerado.toLocaleString('es-CO')}</div>
+                                    <div><strong>Total generado:</strong> ${totalGenerado.toLocaleString('es-CO')}</div>
                                     <div><strong>Servicios:</strong> ${datos.num_servicios || 0} (${numSencillos} simples, ${datos.num_especiales || 0} especiales)</div>
-                                    <div class="propina"><strong>Propinas:</strong> +$${parseFloat(datos.propinaTotal || 0).toLocaleString('es-CO')}</div>
-                                    <div class="aumento"><strong>Aumento:</strong> +$${aumento.toLocaleString('es-CO')}</div>
-                                    ${(datos.prestamos || 0) > 0 ? `<div class="prestamo"><strong>Préstamo:</strong> -$${(datos.prestamos || 0).toLocaleString('es-CO')}</div>` : ''}
+                                    <div class="propina"><strong>Propinas:</strong> +${parseFloat(datos.propinaTotal || 0).toLocaleString('es-CO')}</div>
+                                    <div class="aumento"><strong>Aumento:</strong> +${aumento.toLocaleString('es-CO')}</div>
+                                    ${(datos.prestamos || 0) > 0 ? `<div class="prestamo"><strong>Préstamo:</strong> -${(datos.prestamos || 0).toLocaleString('es-CO')}</div>` : ''}
                                 </div>
                             </div>
                         `;
@@ -484,11 +482,3 @@ window.addEventListener('DOMContentLoaded', () => {
     cargarGastos();
     cargarPrestamos();
 });
-
-
-
-
-
-
-
-
