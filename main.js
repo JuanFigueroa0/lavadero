@@ -299,22 +299,22 @@ async function cargarReportes() {
 
         // STATS GENERALES - CON COLORES
         document.getElementById('statsGenerales').innerHTML = `
-            <div class="stat-card">
-                <h3>Total Servicios</h3>
-                <div class="value">${reportes.totalServicios || 0}</div>
-            </div>
-            <div class="stat-card">
-                <h3>Ingresos Transferencia</h3>
-                <div class="value">${(reportes.ingresosTransferencia || 0).toLocaleString('es-CO')}</div>
-            </div>
-            <div class="stat-card">
-                <h3>Total Ganancias</h3>
-                <div class="value">${(reportes.ingresosTotales || 0).toLocaleString('es-CO')}</div>
-            </div>
-            <div class="stat-card" style="background: #fee2e2; border: 2px solid #ef4444;">
-                <h3 style="color: #991b1b;">Ganancia Administrador</h3>
-                <div class="value" style="color: #dc2626; font-weight: bold;">${(reportes.gananciaNeta || 0).toLocaleString('es-CO')}</div>
-            </div>
+        <div class="stat-card" style="background: #e0e7ff; border: 2px solid #818cf8;">
+            <h3 style="color: #3730a3;">Total Servicios</h3>
+            <div class="value" style="color: #4f46e5;">${reportes.totalServicios || 0}</div>
+        </div>
+        <div class="stat-card" style="background: #ddd6fe; border: 2px solid #a78bfa;">
+            <h3 style="color: #5b21b6;">Ingresos Transferencia</h3>
+            <div class="value" style="color: #7c3aed;">${(reportes.ingresosTransferencia || 0).toLocaleString('es-CO')}</div>
+        </div>
+        <div class="stat-card" style="background: #ccfbf1; border: 2px solid #5eead4;">
+            <h3 style="color: #115e59;">Total Ganancias</h3>
+            <div class="value" style="color: #0f766e;">${(reportes.ingresosTotales || 0).toLocaleString('es-CO')}</div>
+        </div>
+        <div class="stat-card" style="background: #fee2e2; border: 2px solid #ef4444;">
+            <h3 style="color: #991b1b;">Ganancia Administrador</h3>
+            <div class="value" style="color: #dc2626; font-weight: bold;">${(reportes.gananciaNeta || 0).toLocaleString('es-CO')}</div>
+        </div>
         `;
 
         // CAJA Y COMPOSICIÓN DE GANANCIAS - CON COLORES DE FONDO
@@ -479,4 +479,5 @@ window.addEventListener('DOMContentLoaded', () => {
     cargarGastos();
     cargarPrestamos();
 });
+
 
